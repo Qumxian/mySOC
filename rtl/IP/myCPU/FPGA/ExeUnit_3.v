@@ -1,0 +1,971 @@
+module ExeUnit_3(
+  input         clock,
+  input         reset,
+  output        io_inReq_ready, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_pc, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_inst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_ctrl_fuType, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [4:0]  io_inReq_bits_uop_ctrl_aluOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_ctrl_bruOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_ctrl_lsuOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_ctrl_csrOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_ctrl_mulOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_ctrl_divOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_ctrl_src1Type, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_ctrl_src2Type, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_ctrl_immType, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_rfWen, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_memRead, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_memWrite, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_csrWen, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_isBranch, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_isJump, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_ctrl_isPriv, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [16:0] io_inReq_bits_uop_excp_excpVec, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_imm, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [13:0] io_inReq_bits_uop_csrAddress, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_isBr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_isJal, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_isJalr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_isCall, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_pdInfo_isRet, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_pdInfo_jumpTarget, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_bpuInfo_pc, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_bpuInfo_fallThrough, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_taken, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_bpuInfo_target, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [1:0]  io_inReq_bits_uop_bpuInfo_takenOffset, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_btbHit, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [1:0]  io_inReq_bits_uop_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [1:0]  io_inReq_bits_uop_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_bpuInfo_meta_rasTop, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_bpuInfo_meta_predTaken, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_uop_bpuInfo_meta_predTarget, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [4:0]  io_inReq_bits_uop_ldst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [4:0]  io_inReq_bits_uop_lrs1, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [4:0]  io_inReq_bits_uop_lrs2, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [6:0]  io_inReq_bits_uop_pdst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [6:0]  io_inReq_bits_uop_prs1, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [6:0]  io_inReq_bits_uop_prs2, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [6:0]  io_inReq_bits_uop_oldPdst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_rs1Valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_rs2Valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_rdValid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_snptId_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_snptId_bits, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [5:0]  io_inReq_bits_uop_robIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_robIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [5:0]  io_inReq_bits_uop_robIdxFull_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_robIdxFull_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_lqIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_lqIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [3:0]  io_inReq_bits_uop_sqIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_sqIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [2:0]  io_inReq_bits_uop_issueQueue, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_prs1Busy, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_prs2Busy, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_isSta, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_inReq_bits_uop_isStd, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_rs1Data, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input  [31:0] io_inReq_bits_rs2Data, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  input         io_outResult_ready, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_pc, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_inst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_ctrl_fuType, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [4:0]  io_outResult_bits_uop_ctrl_aluOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_ctrl_bruOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_ctrl_lsuOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_ctrl_csrOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_ctrl_mulOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_ctrl_divOp, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_ctrl_src1Type, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_ctrl_src2Type, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_ctrl_immType, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_rfWen, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_memRead, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_memWrite, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_csrWen, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_isBranch, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_isJump, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_ctrl_isPriv, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [16:0] io_outResult_bits_uop_excp_excpVec, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_imm, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [13:0] io_outResult_bits_uop_csrAddress, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_isBr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_isJal, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_isJalr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_isCall, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_pdInfo_isRet, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_pdInfo_jumpTarget, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_bpuInfo_pc, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_bpuInfo_fallThrough, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_taken, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_bpuInfo_target, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [1:0]  io_outResult_bits_uop_bpuInfo_takenOffset, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_btbHit, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [1:0]  io_outResult_bits_uop_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [1:0]  io_outResult_bits_uop_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_bpuInfo_meta_rasTop, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_bpuInfo_meta_predTaken, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_uop_bpuInfo_meta_predTarget, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [4:0]  io_outResult_bits_uop_ldst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [4:0]  io_outResult_bits_uop_lrs1, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [4:0]  io_outResult_bits_uop_lrs2, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [6:0]  io_outResult_bits_uop_pdst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [6:0]  io_outResult_bits_uop_prs1, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [6:0]  io_outResult_bits_uop_prs2, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [6:0]  io_outResult_bits_uop_oldPdst, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_rs1Valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_rs2Valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_rdValid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_snptId_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_snptId_bits, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [5:0]  io_outResult_bits_uop_robIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_robIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [5:0]  io_outResult_bits_uop_robIdxFull_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_robIdxFull_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_lqIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_lqIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [3:0]  io_outResult_bits_uop_sqIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_sqIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [2:0]  io_outResult_bits_uop_issueQueue, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_prs1Busy, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_prs2Busy, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_isSta, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_uop_isStd, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_data, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_redirect_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_redirect_bits_valid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [5:0]  io_outResult_bits_redirect_bits_robIdx_value, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_redirect_bits_robIdx_flag, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_memValid, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_memRead, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_memWrite, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_memVaddr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_memPaddr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_memStoreData, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output        io_outResult_bits_csrWen, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [13:0] io_outResult_bits_csrWaddr, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [31:0] io_outResult_bits_csrWdata, // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+  output [63:0] io_outResult_bits_csrTimer // @[src/main/scala/backend/execute/ExeUnit.scala 46:14]
+);
+`ifdef RANDOMIZE_REG_INIT
+  reg [31:0] _RAND_0;
+  reg [31:0] _RAND_1;
+  reg [31:0] _RAND_2;
+  reg [31:0] _RAND_3;
+  reg [31:0] _RAND_4;
+  reg [31:0] _RAND_5;
+  reg [31:0] _RAND_6;
+  reg [31:0] _RAND_7;
+  reg [31:0] _RAND_8;
+  reg [31:0] _RAND_9;
+  reg [31:0] _RAND_10;
+  reg [31:0] _RAND_11;
+  reg [31:0] _RAND_12;
+  reg [31:0] _RAND_13;
+  reg [31:0] _RAND_14;
+  reg [31:0] _RAND_15;
+  reg [31:0] _RAND_16;
+  reg [31:0] _RAND_17;
+  reg [31:0] _RAND_18;
+  reg [31:0] _RAND_19;
+  reg [31:0] _RAND_20;
+  reg [31:0] _RAND_21;
+  reg [31:0] _RAND_22;
+  reg [31:0] _RAND_23;
+  reg [31:0] _RAND_24;
+  reg [31:0] _RAND_25;
+  reg [31:0] _RAND_26;
+  reg [31:0] _RAND_27;
+  reg [31:0] _RAND_28;
+  reg [31:0] _RAND_29;
+  reg [31:0] _RAND_30;
+  reg [31:0] _RAND_31;
+  reg [31:0] _RAND_32;
+  reg [31:0] _RAND_33;
+  reg [31:0] _RAND_34;
+  reg [31:0] _RAND_35;
+  reg [31:0] _RAND_36;
+  reg [31:0] _RAND_37;
+  reg [31:0] _RAND_38;
+  reg [31:0] _RAND_39;
+  reg [31:0] _RAND_40;
+  reg [31:0] _RAND_41;
+  reg [31:0] _RAND_42;
+  reg [31:0] _RAND_43;
+  reg [31:0] _RAND_44;
+  reg [31:0] _RAND_45;
+  reg [31:0] _RAND_46;
+  reg [31:0] _RAND_47;
+  reg [31:0] _RAND_48;
+  reg [31:0] _RAND_49;
+  reg [31:0] _RAND_50;
+  reg [31:0] _RAND_51;
+  reg [31:0] _RAND_52;
+  reg [31:0] _RAND_53;
+  reg [31:0] _RAND_54;
+  reg [31:0] _RAND_55;
+  reg [31:0] _RAND_56;
+  reg [31:0] _RAND_57;
+  reg [31:0] _RAND_58;
+  reg [31:0] _RAND_59;
+  reg [31:0] _RAND_60;
+  reg [31:0] _RAND_61;
+  reg [31:0] _RAND_62;
+  reg [31:0] _RAND_63;
+  reg [31:0] _RAND_64;
+  reg [31:0] _RAND_65;
+  reg [31:0] _RAND_66;
+  reg [31:0] _RAND_67;
+  reg [31:0] _RAND_68;
+  reg [31:0] _RAND_69;
+  reg [31:0] _RAND_70;
+  reg [31:0] _RAND_71;
+  reg [31:0] _RAND_72;
+`endif // RANDOMIZE_REG_INIT
+  wire  _isFastPath_T_3 = io_inReq_bits_uop_ctrl_fuType == 4'h3; // @[src/main/scala/backend/execute/ExeUnit.scala 69:35]
+  wire  _isFastPath_T_4 = io_inReq_bits_uop_ctrl_fuType == 4'h1 | io_inReq_bits_uop_ctrl_fuType == 4'h2 |
+    _isFastPath_T_3; // @[src/main/scala/backend/execute/ExeUnit.scala 68:83]
+  wire  _isFastPath_T_7 = io_inReq_bits_uop_ctrl_fuType == 4'h7; // @[src/main/scala/backend/execute/ExeUnit.scala 70:35]
+  wire  isFastPath = _isFastPath_T_4 | io_inReq_bits_uop_ctrl_fuType == 4'h4 | _isFastPath_T_7; // @[src/main/scala/backend/execute/ExeUnit.scala 69:83]
+  reg  stgValid; // @[src/main/scala/backend/execute/ExeUnit.scala 77:25]
+  reg [31:0] stgData_uop_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_inst; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_ctrl_fuType; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [4:0] stgData_uop_ctrl_aluOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_ctrl_bruOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_ctrl_lsuOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_ctrl_csrOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_ctrl_mulOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_ctrl_divOp; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_ctrl_src1Type; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_ctrl_src2Type; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_ctrl_immType; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_rfWen; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_memRead; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_memWrite; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_csrWen; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_isBranch; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_isJump; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_ctrl_isPriv; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [16:0] stgData_uop_excp_excpVec; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_imm; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [13:0] stgData_uop_csrAddress; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_isBr; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_isJal; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_isJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_isCall; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_pdInfo_isRet; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_pdInfo_jumpTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_bpuInfo_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_bpuInfo_fallThrough; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_taken; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_bpuInfo_target; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [1:0] stgData_uop_bpuInfo_takenOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_btbHit; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [1:0] stgData_uop_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [1:0] stgData_uop_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_bpuInfo_meta_rasTop; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_bpuInfo_meta_predTaken; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_uop_bpuInfo_meta_predTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [4:0] stgData_uop_ldst; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [4:0] stgData_uop_lrs1; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [4:0] stgData_uop_lrs2; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [6:0] stgData_uop_pdst; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [6:0] stgData_uop_prs1; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [6:0] stgData_uop_prs2; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [6:0] stgData_uop_oldPdst; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_rs1Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_rs2Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_rdValid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_snptId_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_snptId_bits; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [5:0] stgData_uop_robIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_robIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [5:0] stgData_uop_robIdxFull_value; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_robIdxFull_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_lqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_lqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [3:0] stgData_uop_sqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_sqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [2:0] stgData_uop_issueQueue; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_prs1Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_prs2Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_isSta; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg  stgData_uop_isStd; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_rs1Data; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  reg [31:0] stgData_rs2Data; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+  wire  outFire = stgValid & io_outResult_ready; // @[src/main/scala/backend/execute/ExeUnit.scala 80:27]
+  wire  stgReady = ~stgValid | outFire; // @[src/main/scala/backend/execute/ExeUnit.scala 81:28]
+  wire  fastInFire = io_inReq_valid & isFastPath & stgReady; // @[src/main/scala/backend/execute/ExeUnit.scala 83:49]
+  wire  _GEN_0 = outFire ? 1'h0 : stgValid; // @[src/main/scala/backend/execute/ExeUnit.scala 100:23 101:14 77:25]
+  wire  _GEN_1 = fastInFire | _GEN_0; // @[src/main/scala/backend/execute/ExeUnit.scala 97:26 98:14]
+  wire  _memAddrValid_T = stgData_uop_ctrl_fuType == 4'h3; // @[src/main/scala/backend/execute/ExeUnit.scala 151:64]
+  wire  _memAddrValid_T_1 = stgValid & stgData_uop_ctrl_fuType == 4'h3; // @[src/main/scala/backend/execute/ExeUnit.scala 151:54]
+  wire  memAddrValid = stgValid & stgData_uop_ctrl_fuType == 4'h3 & ~stgData_uop_isStd; // @[src/main/scala/backend/execute/ExeUnit.scala 151:79]
+  wire [31:0] memAddr = stgData_rs1Data + stgData_uop_imm; // @[src/main/scala/backend/execute/ExeUnit.scala 154:54]
+  assign io_inReq_ready = isFastPath & stgReady; // @[src/main/scala/backend/execute/ExeUnit.scala 227:24]
+  assign io_outResult_valid = stgValid; // @[src/main/scala/backend/execute/ExeUnit.scala 238:49]
+  assign io_outResult_bits_uop_pc = stgData_uop_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_inst = stgData_uop_inst; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_fuType = stgData_uop_ctrl_fuType; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_aluOp = stgData_uop_ctrl_aluOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_bruOp = stgData_uop_ctrl_bruOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_lsuOp = stgData_uop_ctrl_lsuOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_csrOp = stgData_uop_ctrl_csrOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_mulOp = stgData_uop_ctrl_mulOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_divOp = stgData_uop_ctrl_divOp; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_src1Type = stgData_uop_ctrl_src1Type; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_src2Type = stgData_uop_ctrl_src2Type; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_immType = stgData_uop_ctrl_immType; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_rfWen = stgData_uop_ctrl_rfWen; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_memRead = stgData_uop_ctrl_memRead; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_memWrite = stgData_uop_ctrl_memWrite; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_csrWen = stgData_uop_ctrl_csrWen; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_isBranch = stgData_uop_ctrl_isBranch; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_isJump = stgData_uop_ctrl_isJump; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ctrl_isPriv = stgData_uop_ctrl_isPriv; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_excp_excpVec = stgData_uop_excp_excpVec; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_imm = stgData_uop_imm; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_csrAddress = stgData_uop_csrAddress; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_valid = stgData_uop_pdInfo_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_isBr = stgData_uop_pdInfo_isBr; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_isJal = stgData_uop_pdInfo_isJal; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_isJalr = stgData_uop_pdInfo_isJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_isCall = stgData_uop_pdInfo_isCall; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_isRet = stgData_uop_pdInfo_isRet; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdInfo_jumpTarget = stgData_uop_pdInfo_jumpTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_pc = stgData_uop_bpuInfo_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_fallThrough = stgData_uop_bpuInfo_fallThrough; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_taken = stgData_uop_bpuInfo_taken; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_target = stgData_uop_bpuInfo_target; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_takenOffset = stgData_uop_bpuInfo_takenOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_valid = stgData_uop_bpuInfo_meta_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbHit = stgData_uop_bpuInfo_meta_btbHit; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbIsJalr = stgData_uop_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbIsJal = stgData_uop_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbIsCall = stgData_uop_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbIsRet = stgData_uop_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_btbOffset = stgData_uop_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_phtCounter = stgData_uop_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_rasTop = stgData_uop_bpuInfo_meta_rasTop; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_predTaken = stgData_uop_bpuInfo_meta_predTaken; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_bpuInfo_meta_predTarget = stgData_uop_bpuInfo_meta_predTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_ldst = stgData_uop_ldst; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_lrs1 = stgData_uop_lrs1; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_lrs2 = stgData_uop_lrs2; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_pdst = stgData_uop_pdst; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_prs1 = stgData_uop_prs1; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_prs2 = stgData_uop_prs2; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_oldPdst = stgData_uop_oldPdst; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_rs1Valid = stgData_uop_rs1Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_rs2Valid = stgData_uop_rs2Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_rdValid = stgData_uop_rdValid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_snptId_valid = stgData_uop_snptId_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_snptId_bits = stgData_uop_snptId_bits; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_robIdx_value = stgData_uop_robIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_robIdx_flag = stgData_uop_robIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_robIdxFull_value = stgData_uop_robIdxFull_value; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_robIdxFull_flag = stgData_uop_robIdxFull_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_lqIdx_value = stgData_uop_lqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_lqIdx_flag = stgData_uop_lqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_sqIdx_value = stgData_uop_sqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_sqIdx_flag = stgData_uop_sqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_issueQueue = stgData_uop_issueQueue; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_prs1Busy = stgData_uop_prs1Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_prs2Busy = stgData_uop_prs2Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_isSta = stgData_uop_isSta; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_uop_isStd = stgData_uop_isStd; // @[src/main/scala/backend/execute/ExeUnit.scala 256:26]
+  assign io_outResult_bits_data = memAddrValid ? memAddr : 32'h0; // @[src/main/scala/chisel3/util/Mux.scala 30:73]
+  assign io_outResult_bits_redirect_valid = 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 259:36]
+  assign io_outResult_bits_redirect_bits_valid = 1'h0;
+  assign io_outResult_bits_redirect_bits_robIdx_value = 6'h0;
+  assign io_outResult_bits_redirect_bits_robIdx_flag = 1'h0;
+  assign io_outResult_bits_memValid = stgValid & _memAddrValid_T; // @[src/main/scala/backend/execute/ExeUnit.scala 181:30]
+  assign io_outResult_bits_memRead = _memAddrValid_T_1 & stgData_uop_ctrl_memRead; // @[src/main/scala/backend/execute/ExeUnit.scala 185:36]
+  assign io_outResult_bits_memWrite = _memAddrValid_T_1 & stgData_uop_ctrl_memWrite; // @[src/main/scala/backend/execute/ExeUnit.scala 186:36]
+  assign io_outResult_bits_memVaddr = stgData_rs1Data + stgData_uop_imm; // @[src/main/scala/backend/execute/ExeUnit.scala 154:54]
+  assign io_outResult_bits_memPaddr = 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 275:35]
+  assign io_outResult_bits_memStoreData = stgData_rs2Data; // @[src/main/scala/backend/execute/ExeUnit.scala 278:35]
+  assign io_outResult_bits_csrWen = 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 283:30]
+  assign io_outResult_bits_csrWaddr = 14'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 194:25]
+  assign io_outResult_bits_csrWdata = 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 289:30]
+  assign io_outResult_bits_csrTimer = 64'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 292:30]
+  always @(posedge clock) begin
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 77:25]
+      stgValid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 77:25]
+    end else begin
+      stgValid <= _GEN_1;
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pc <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pc <= io_inReq_bits_uop_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_inst <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_inst <= io_inReq_bits_uop_inst; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_fuType <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_fuType <= io_inReq_bits_uop_ctrl_fuType; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_aluOp <= 5'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_aluOp <= io_inReq_bits_uop_ctrl_aluOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_bruOp <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_bruOp <= io_inReq_bits_uop_ctrl_bruOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_lsuOp <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_lsuOp <= io_inReq_bits_uop_ctrl_lsuOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_csrOp <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_csrOp <= io_inReq_bits_uop_ctrl_csrOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_mulOp <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_mulOp <= io_inReq_bits_uop_ctrl_mulOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_divOp <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_divOp <= io_inReq_bits_uop_ctrl_divOp; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_src1Type <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_src1Type <= io_inReq_bits_uop_ctrl_src1Type; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_src2Type <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_src2Type <= io_inReq_bits_uop_ctrl_src2Type; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_immType <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_immType <= io_inReq_bits_uop_ctrl_immType; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_rfWen <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_rfWen <= io_inReq_bits_uop_ctrl_rfWen; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_memRead <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_memRead <= io_inReq_bits_uop_ctrl_memRead; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_memWrite <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_memWrite <= io_inReq_bits_uop_ctrl_memWrite; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_csrWen <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_csrWen <= io_inReq_bits_uop_ctrl_csrWen; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_isBranch <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_isBranch <= io_inReq_bits_uop_ctrl_isBranch; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_isJump <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_isJump <= io_inReq_bits_uop_ctrl_isJump; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ctrl_isPriv <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ctrl_isPriv <= io_inReq_bits_uop_ctrl_isPriv; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_excp_excpVec <= 17'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_excp_excpVec <= io_inReq_bits_uop_excp_excpVec; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_imm <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_imm <= io_inReq_bits_uop_imm; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_csrAddress <= 14'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_csrAddress <= io_inReq_bits_uop_csrAddress; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_valid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_valid <= io_inReq_bits_uop_pdInfo_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_isBr <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_isBr <= io_inReq_bits_uop_pdInfo_isBr; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_isJal <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_isJal <= io_inReq_bits_uop_pdInfo_isJal; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_isJalr <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_isJalr <= io_inReq_bits_uop_pdInfo_isJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_isCall <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_isCall <= io_inReq_bits_uop_pdInfo_isCall; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_isRet <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_isRet <= io_inReq_bits_uop_pdInfo_isRet; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdInfo_jumpTarget <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdInfo_jumpTarget <= io_inReq_bits_uop_pdInfo_jumpTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_pc <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_pc <= io_inReq_bits_uop_bpuInfo_pc; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_fallThrough <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_fallThrough <= io_inReq_bits_uop_bpuInfo_fallThrough; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_taken <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_taken <= io_inReq_bits_uop_bpuInfo_taken; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_target <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_target <= io_inReq_bits_uop_bpuInfo_target; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_takenOffset <= 2'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_takenOffset <= io_inReq_bits_uop_bpuInfo_takenOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_valid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_valid <= io_inReq_bits_uop_bpuInfo_meta_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbHit <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbHit <= io_inReq_bits_uop_bpuInfo_meta_btbHit; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbIsJalr <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbIsJalr <= io_inReq_bits_uop_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbIsJal <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbIsJal <= io_inReq_bits_uop_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbIsCall <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbIsCall <= io_inReq_bits_uop_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbIsRet <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbIsRet <= io_inReq_bits_uop_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_btbOffset <= 2'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_btbOffset <= io_inReq_bits_uop_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_phtCounter <= 2'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_phtCounter <= io_inReq_bits_uop_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_rasTop <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_rasTop <= io_inReq_bits_uop_bpuInfo_meta_rasTop; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_predTaken <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_predTaken <= io_inReq_bits_uop_bpuInfo_meta_predTaken; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_bpuInfo_meta_predTarget <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_bpuInfo_meta_predTarget <= io_inReq_bits_uop_bpuInfo_meta_predTarget; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_ldst <= 5'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_ldst <= io_inReq_bits_uop_ldst; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_lrs1 <= 5'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_lrs1 <= io_inReq_bits_uop_lrs1; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_lrs2 <= 5'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_lrs2 <= io_inReq_bits_uop_lrs2; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_pdst <= 7'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_pdst <= io_inReq_bits_uop_pdst; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_prs1 <= 7'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_prs1 <= io_inReq_bits_uop_prs1; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_prs2 <= 7'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_prs2 <= io_inReq_bits_uop_prs2; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_oldPdst <= 7'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_oldPdst <= io_inReq_bits_uop_oldPdst; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_rs1Valid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_rs1Valid <= io_inReq_bits_uop_rs1Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_rs2Valid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_rs2Valid <= io_inReq_bits_uop_rs2Valid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_rdValid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_rdValid <= io_inReq_bits_uop_rdValid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_snptId_valid <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_snptId_valid <= io_inReq_bits_uop_snptId_valid; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_snptId_bits <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_snptId_bits <= io_inReq_bits_uop_snptId_bits; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_robIdx_value <= 6'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_robIdx_value <= io_inReq_bits_uop_robIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_robIdx_flag <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_robIdx_flag <= io_inReq_bits_uop_robIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_robIdxFull_value <= 6'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_robIdxFull_value <= io_inReq_bits_uop_robIdxFull_value; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_robIdxFull_flag <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_robIdxFull_flag <= io_inReq_bits_uop_robIdxFull_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_lqIdx_value <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_lqIdx_value <= io_inReq_bits_uop_lqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_lqIdx_flag <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_lqIdx_flag <= io_inReq_bits_uop_lqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_sqIdx_value <= 4'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_sqIdx_value <= io_inReq_bits_uop_sqIdx_value; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_sqIdx_flag <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_sqIdx_flag <= io_inReq_bits_uop_sqIdx_flag; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_issueQueue <= 3'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_issueQueue <= io_inReq_bits_uop_issueQueue; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_prs1Busy <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_prs1Busy <= io_inReq_bits_uop_prs1Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_prs2Busy <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_prs2Busy <= io_inReq_bits_uop_prs2Busy; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_isSta <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_isSta <= io_inReq_bits_uop_isSta; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_uop_isStd <= 1'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_uop_isStd <= io_inReq_bits_uop_isStd; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_rs1Data <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_rs1Data <= io_inReq_bits_rs1Data; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+    if (reset) begin // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+      stgData_rs2Data <= 32'h0; // @[src/main/scala/backend/execute/ExeUnit.scala 78:24]
+    end else if (fastInFire) begin // @[src/main/scala/backend/execute/ExeUnit.scala 97:26]
+      stgData_rs2Data <= io_inReq_bits_rs2Data; // @[src/main/scala/backend/execute/ExeUnit.scala 99:14]
+    end
+  end
+// Register and memory initialization
+`ifdef RANDOMIZE_GARBAGE_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_INVALID_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_REG_INIT
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+`define RANDOMIZE
+`endif
+`ifndef RANDOM
+`define RANDOM $random
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+  integer initvar;
+`endif
+`ifndef SYNTHESIS
+`ifdef FIRRTL_BEFORE_INITIAL
+`FIRRTL_BEFORE_INITIAL
+`endif
+initial begin
+  `ifdef RANDOMIZE
+    `ifdef INIT_RANDOM
+      `INIT_RANDOM
+    `endif
+    `ifndef VERILATOR
+      `ifdef RANDOMIZE_DELAY
+        #`RANDOMIZE_DELAY begin end
+      `else
+        #0.002 begin end
+      `endif
+    `endif
+`ifdef RANDOMIZE_REG_INIT
+  _RAND_0 = {1{`RANDOM}};
+  stgValid = _RAND_0[0:0];
+  _RAND_1 = {1{`RANDOM}};
+  stgData_uop_pc = _RAND_1[31:0];
+  _RAND_2 = {1{`RANDOM}};
+  stgData_uop_inst = _RAND_2[31:0];
+  _RAND_3 = {1{`RANDOM}};
+  stgData_uop_ctrl_fuType = _RAND_3[3:0];
+  _RAND_4 = {1{`RANDOM}};
+  stgData_uop_ctrl_aluOp = _RAND_4[4:0];
+  _RAND_5 = {1{`RANDOM}};
+  stgData_uop_ctrl_bruOp = _RAND_5[3:0];
+  _RAND_6 = {1{`RANDOM}};
+  stgData_uop_ctrl_lsuOp = _RAND_6[3:0];
+  _RAND_7 = {1{`RANDOM}};
+  stgData_uop_ctrl_csrOp = _RAND_7[2:0];
+  _RAND_8 = {1{`RANDOM}};
+  stgData_uop_ctrl_mulOp = _RAND_8[2:0];
+  _RAND_9 = {1{`RANDOM}};
+  stgData_uop_ctrl_divOp = _RAND_9[2:0];
+  _RAND_10 = {1{`RANDOM}};
+  stgData_uop_ctrl_src1Type = _RAND_10[2:0];
+  _RAND_11 = {1{`RANDOM}};
+  stgData_uop_ctrl_src2Type = _RAND_11[2:0];
+  _RAND_12 = {1{`RANDOM}};
+  stgData_uop_ctrl_immType = _RAND_12[3:0];
+  _RAND_13 = {1{`RANDOM}};
+  stgData_uop_ctrl_rfWen = _RAND_13[0:0];
+  _RAND_14 = {1{`RANDOM}};
+  stgData_uop_ctrl_memRead = _RAND_14[0:0];
+  _RAND_15 = {1{`RANDOM}};
+  stgData_uop_ctrl_memWrite = _RAND_15[0:0];
+  _RAND_16 = {1{`RANDOM}};
+  stgData_uop_ctrl_csrWen = _RAND_16[0:0];
+  _RAND_17 = {1{`RANDOM}};
+  stgData_uop_ctrl_isBranch = _RAND_17[0:0];
+  _RAND_18 = {1{`RANDOM}};
+  stgData_uop_ctrl_isJump = _RAND_18[0:0];
+  _RAND_19 = {1{`RANDOM}};
+  stgData_uop_ctrl_isPriv = _RAND_19[0:0];
+  _RAND_20 = {1{`RANDOM}};
+  stgData_uop_excp_excpVec = _RAND_20[16:0];
+  _RAND_21 = {1{`RANDOM}};
+  stgData_uop_imm = _RAND_21[31:0];
+  _RAND_22 = {1{`RANDOM}};
+  stgData_uop_csrAddress = _RAND_22[13:0];
+  _RAND_23 = {1{`RANDOM}};
+  stgData_uop_pdInfo_valid = _RAND_23[0:0];
+  _RAND_24 = {1{`RANDOM}};
+  stgData_uop_pdInfo_isBr = _RAND_24[0:0];
+  _RAND_25 = {1{`RANDOM}};
+  stgData_uop_pdInfo_isJal = _RAND_25[0:0];
+  _RAND_26 = {1{`RANDOM}};
+  stgData_uop_pdInfo_isJalr = _RAND_26[0:0];
+  _RAND_27 = {1{`RANDOM}};
+  stgData_uop_pdInfo_isCall = _RAND_27[0:0];
+  _RAND_28 = {1{`RANDOM}};
+  stgData_uop_pdInfo_isRet = _RAND_28[0:0];
+  _RAND_29 = {1{`RANDOM}};
+  stgData_uop_pdInfo_jumpTarget = _RAND_29[31:0];
+  _RAND_30 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_pc = _RAND_30[31:0];
+  _RAND_31 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_fallThrough = _RAND_31[31:0];
+  _RAND_32 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_taken = _RAND_32[0:0];
+  _RAND_33 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_target = _RAND_33[31:0];
+  _RAND_34 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_takenOffset = _RAND_34[1:0];
+  _RAND_35 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_valid = _RAND_35[0:0];
+  _RAND_36 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbHit = _RAND_36[0:0];
+  _RAND_37 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbIsJalr = _RAND_37[0:0];
+  _RAND_38 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbIsJal = _RAND_38[0:0];
+  _RAND_39 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbIsCall = _RAND_39[0:0];
+  _RAND_40 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbIsRet = _RAND_40[0:0];
+  _RAND_41 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_btbOffset = _RAND_41[1:0];
+  _RAND_42 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_phtCounter = _RAND_42[1:0];
+  _RAND_43 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_rasTop = _RAND_43[2:0];
+  _RAND_44 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_predTaken = _RAND_44[0:0];
+  _RAND_45 = {1{`RANDOM}};
+  stgData_uop_bpuInfo_meta_predTarget = _RAND_45[31:0];
+  _RAND_46 = {1{`RANDOM}};
+  stgData_uop_ldst = _RAND_46[4:0];
+  _RAND_47 = {1{`RANDOM}};
+  stgData_uop_lrs1 = _RAND_47[4:0];
+  _RAND_48 = {1{`RANDOM}};
+  stgData_uop_lrs2 = _RAND_48[4:0];
+  _RAND_49 = {1{`RANDOM}};
+  stgData_uop_pdst = _RAND_49[6:0];
+  _RAND_50 = {1{`RANDOM}};
+  stgData_uop_prs1 = _RAND_50[6:0];
+  _RAND_51 = {1{`RANDOM}};
+  stgData_uop_prs2 = _RAND_51[6:0];
+  _RAND_52 = {1{`RANDOM}};
+  stgData_uop_oldPdst = _RAND_52[6:0];
+  _RAND_53 = {1{`RANDOM}};
+  stgData_uop_rs1Valid = _RAND_53[0:0];
+  _RAND_54 = {1{`RANDOM}};
+  stgData_uop_rs2Valid = _RAND_54[0:0];
+  _RAND_55 = {1{`RANDOM}};
+  stgData_uop_rdValid = _RAND_55[0:0];
+  _RAND_56 = {1{`RANDOM}};
+  stgData_uop_snptId_valid = _RAND_56[0:0];
+  _RAND_57 = {1{`RANDOM}};
+  stgData_uop_snptId_bits = _RAND_57[2:0];
+  _RAND_58 = {1{`RANDOM}};
+  stgData_uop_robIdx_value = _RAND_58[5:0];
+  _RAND_59 = {1{`RANDOM}};
+  stgData_uop_robIdx_flag = _RAND_59[0:0];
+  _RAND_60 = {1{`RANDOM}};
+  stgData_uop_robIdxFull_value = _RAND_60[5:0];
+  _RAND_61 = {1{`RANDOM}};
+  stgData_uop_robIdxFull_flag = _RAND_61[0:0];
+  _RAND_62 = {1{`RANDOM}};
+  stgData_uop_lqIdx_value = _RAND_62[3:0];
+  _RAND_63 = {1{`RANDOM}};
+  stgData_uop_lqIdx_flag = _RAND_63[0:0];
+  _RAND_64 = {1{`RANDOM}};
+  stgData_uop_sqIdx_value = _RAND_64[3:0];
+  _RAND_65 = {1{`RANDOM}};
+  stgData_uop_sqIdx_flag = _RAND_65[0:0];
+  _RAND_66 = {1{`RANDOM}};
+  stgData_uop_issueQueue = _RAND_66[2:0];
+  _RAND_67 = {1{`RANDOM}};
+  stgData_uop_prs1Busy = _RAND_67[0:0];
+  _RAND_68 = {1{`RANDOM}};
+  stgData_uop_prs2Busy = _RAND_68[0:0];
+  _RAND_69 = {1{`RANDOM}};
+  stgData_uop_isSta = _RAND_69[0:0];
+  _RAND_70 = {1{`RANDOM}};
+  stgData_uop_isStd = _RAND_70[0:0];
+  _RAND_71 = {1{`RANDOM}};
+  stgData_rs1Data = _RAND_71[31:0];
+  _RAND_72 = {1{`RANDOM}};
+  stgData_rs2Data = _RAND_72[31:0];
+`endif // RANDOMIZE_REG_INIT
+  `endif // RANDOMIZE
+end // initial
+`ifdef FIRRTL_AFTER_INITIAL
+`FIRRTL_AFTER_INITIAL
+`endif
+`endif // SYNTHESIS
+endmodule

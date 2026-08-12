@@ -1,0 +1,3088 @@
+module Scheduler(
+  input         clock,
+  input         reset,
+  input         io_q1IQEnq_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q1IQEnq_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q1IQEnq_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q1IQEnq_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q1IQEnq_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q1IQEnq_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [16:0] io_q1IQEnq_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [13:0] io_q1IQEnq_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q1IQEnq_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q1IQEnq_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q1IQEnq_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q1IQEnq_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q1IQEnq_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q1IQEnq_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q1IQEnq_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q1IQEnq_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q1IQEnq_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q1IQEnq_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q1IQEnq_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q1IQEnq_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q1IQEnq_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q1IQEnq_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1IQEnq_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q2IQEnq_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q2IQEnq_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q2IQEnq_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q2IQEnq_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q2IQEnq_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [16:0] io_q2IQEnq_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [13:0] io_q2IQEnq_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q2IQEnq_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q2IQEnq_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q2IQEnq_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q2IQEnq_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q2IQEnq_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q2IQEnq_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q2IQEnq_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q2IQEnq_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q2IQEnq_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q2IQEnq_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q2IQEnq_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q2IQEnq_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q2IQEnq_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q2IQEnq_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2IQEnq_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q3IQEnq_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q3IQEnq_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q3IQEnq_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q3IQEnq_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q3IQEnq_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [16:0] io_q3IQEnq_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [13:0] io_q3IQEnq_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q3IQEnq_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q3IQEnq_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q3IQEnq_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q3IQEnq_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q3IQEnq_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q3IQEnq_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q3IQEnq_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q3IQEnq_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q3IQEnq_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q3IQEnq_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q3IQEnq_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q3IQEnq_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q3IQEnq_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q3IQEnq_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3IQEnq_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q4IQEnq_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [16:0] io_q4IQEnq_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [13:0] io_q4IQEnq_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q4IQEnq_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q4IQEnq_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q4IQEnq_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q4IQEnq_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q4IQEnq_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q4IQEnq_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q4IQEnq_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q4IQEnq_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q4IQEnq_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q4IQEnq_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q4IQEnq_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q4IQEnq_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q4IQEnq_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q4IQEnq_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q4IQEnq_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4IQEnq_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q5IQEnq_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [16:0] io_q5IQEnq_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [13:0] io_q5IQEnq_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q5IQEnq_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q5IQEnq_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [1:0]  io_q5IQEnq_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [31:0] io_q5IQEnq_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q5IQEnq_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q5IQEnq_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [4:0]  io_q5IQEnq_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q5IQEnq_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q5IQEnq_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q5IQEnq_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_q5IQEnq_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q5IQEnq_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_q5IQEnq_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [3:0]  io_q5IQEnq_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [2:0]  io_q5IQEnq_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5IQEnq_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q1Issue_ready, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q1Issue_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [16:0] io_q1Issue_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [13:0] io_q1Issue_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q1Issue_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q1Issue_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q1Issue_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q1Issue_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q1Issue_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q1Issue_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q1Issue_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q1Issue_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q1Issue_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q1Issue_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q1Issue_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q1Issue_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q1Issue_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q1Issue_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q1Issue_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q1Issue_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q2Issue_ready, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q2Issue_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q2Issue_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q2Issue_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q2Issue_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q2Issue_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [16:0] io_q2Issue_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [13:0] io_q2Issue_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q2Issue_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q2Issue_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q2Issue_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q2Issue_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q2Issue_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q2Issue_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q2Issue_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q2Issue_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q2Issue_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q2Issue_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q2Issue_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q2Issue_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q2Issue_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q2Issue_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q2Issue_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q3Issue_ready, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q3Issue_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [16:0] io_q3Issue_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [13:0] io_q3Issue_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q3Issue_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q3Issue_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q3Issue_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q3Issue_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q3Issue_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q3Issue_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q3Issue_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q3Issue_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q3Issue_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q3Issue_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q3Issue_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q3Issue_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q3Issue_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q3Issue_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q3Issue_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q3Issue_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q4Issue_ready, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q4Issue_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [16:0] io_q4Issue_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [13:0] io_q4Issue_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q4Issue_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q4Issue_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q4Issue_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q4Issue_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q4Issue_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q4Issue_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q4Issue_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q4Issue_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q4Issue_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q4Issue_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q4Issue_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q4Issue_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q4Issue_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q4Issue_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q4Issue_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q4Issue_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_q5Issue_ready, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_inst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_ctrl_fuType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q5Issue_bits_ctrl_aluOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_ctrl_bruOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_ctrl_lsuOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_ctrl_csrOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_ctrl_mulOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_ctrl_divOp, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_ctrl_src1Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_ctrl_src2Type, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_ctrl_immType, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_rfWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_memRead, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_memWrite, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_csrWen, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_isBranch, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_isJump, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_ctrl_isPriv, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [16:0] io_q5Issue_bits_excp_excpVec, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_imm, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [13:0] io_q5Issue_bits_csrAddress, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_isBr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_isJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_isJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_isCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_pdInfo_isRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_pdInfo_jumpTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_bpuInfo_pc, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_bpuInfo_fallThrough, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_taken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_bpuInfo_target, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q5Issue_bits_bpuInfo_takenOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_btbHit, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_btbIsJalr, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_btbIsJal, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_btbIsCall, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_btbIsRet, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q5Issue_bits_bpuInfo_meta_btbOffset, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [1:0]  io_q5Issue_bits_bpuInfo_meta_phtCounter, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_bpuInfo_meta_rasTop, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_bpuInfo_meta_predTaken, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [31:0] io_q5Issue_bits_bpuInfo_meta_predTarget, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q5Issue_bits_ldst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q5Issue_bits_lrs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_q5Issue_bits_lrs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q5Issue_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q5Issue_bits_prs1, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q5Issue_bits_prs2, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [6:0]  io_q5Issue_bits_oldPdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_rs1Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_rs2Valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_rdValid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_snptId_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_snptId_bits, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q5Issue_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [5:0]  io_q5Issue_bits_robIdxFull_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_robIdxFull_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_lqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_lqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_q5Issue_bits_sqIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_sqIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [2:0]  io_q5Issue_bits_issueQueue, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_prs1Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_prs2Busy, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_isSta, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output        io_q5Issue_bits_isStd, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_wakeupPorts_0_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_wakeupPorts_0_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_wakeupPorts_1_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_wakeupPorts_1_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_wakeupPorts_2_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_wakeupPorts_2_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_wakeupPorts_3_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_wakeupPorts_3_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_wakeupPorts_4_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [6:0]  io_wakeupPorts_4_bits_pdst, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_redirectInfo_valid, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_redirectInfo_bits_doRedirect, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input  [5:0]  io_redirectInfo_bits_robIdx_value, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  input         io_redirectInfo_bits_robIdx_flag, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_feedback_q1FreeEntries, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_feedback_q2FreeEntries, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_feedback_q3FreeEntries, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [4:0]  io_feedback_q4FreeEntries, // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+  output [3:0]  io_feedback_q5FreeEntries // @[src/main/scala/backend/scheduler/Scheduler.scala 22:14]
+);
+  wire  q1_clock; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_reset; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_enq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [16:0] q1_io_enq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [13:0] q1_io_enq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_enq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_enq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_enq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_enq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_enq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_enq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_enq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_enq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_enq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_enq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_enq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [5:0] q1_io_enq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [5:0] q1_io_enq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_enq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_enq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_enq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [16:0] q1_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [13:0] q1_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [1:0] q1_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [31:0] q1_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [5:0] q1_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [5:0] q1_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [3:0] q1_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [2:0] q1_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [6:0] q1_io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [5:0] q1_io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q1_io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire [4:0] q1_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+  wire  q2_clock; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_reset; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_enq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_enq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_enq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_enq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_enq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [16:0] q2_io_enq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [13:0] q2_io_enq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_enq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_enq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_enq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_enq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_enq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_enq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_enq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_enq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_enq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_enq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_enq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [5:0] q2_io_enq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [5:0] q2_io_enq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_enq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_enq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [16:0] q2_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [13:0] q2_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [1:0] q2_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [31:0] q2_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [4:0] q2_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [5:0] q2_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [5:0] q2_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [2:0] q2_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [6:0] q2_io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [5:0] q2_io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q2_io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire [3:0] q2_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+  wire  q3_clock; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_reset; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_enq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [16:0] q3_io_enq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [13:0] q3_io_enq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_enq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_enq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_enq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_enq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_enq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_enq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_enq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_enq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_enq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_enq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_enq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [5:0] q3_io_enq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [5:0] q3_io_enq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_enq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_enq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_enq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [16:0] q3_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [13:0] q3_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [1:0] q3_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [31:0] q3_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [5:0] q3_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [5:0] q3_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [3:0] q3_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [2:0] q3_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [6:0] q3_io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [5:0] q3_io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q3_io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire [4:0] q3_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+  wire  q4_clock; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_reset; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_enq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [16:0] q4_io_enq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [13:0] q4_io_enq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_enq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_enq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_enq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_enq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_enq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_enq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_enq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_enq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_enq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_enq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_enq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [5:0] q4_io_enq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [5:0] q4_io_enq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_enq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_enq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_enq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [16:0] q4_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [13:0] q4_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [1:0] q4_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [31:0] q4_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [5:0] q4_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [5:0] q4_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [3:0] q4_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [2:0] q4_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [6:0] q4_io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [5:0] q4_io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q4_io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire [4:0] q4_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+  wire  q5_clock; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_reset; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_enq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [16:0] q5_io_enq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [13:0] q5_io_enq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_enq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_enq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_enq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_enq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_enq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_enq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_enq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_enq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_enq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_enq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_enq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [5:0] q5_io_enq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [5:0] q5_io_enq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_enq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_enq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_enq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [16:0] q5_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [13:0] q5_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [1:0] q5_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [31:0] q5_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [4:0] q5_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [5:0] q5_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [5:0] q5_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [2:0] q5_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [6:0] q5_io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [5:0] q5_io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire  q5_io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  wire [3:0] q5_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+  IssueQueue q1 ( // @[src/main/scala/backend/scheduler/Scheduler.scala 52:18]
+    .clock(q1_clock),
+    .reset(q1_reset),
+    .io_enq_valid(q1_io_enq_valid),
+    .io_enq_bits_pc(q1_io_enq_bits_pc),
+    .io_enq_bits_inst(q1_io_enq_bits_inst),
+    .io_enq_bits_ctrl_fuType(q1_io_enq_bits_ctrl_fuType),
+    .io_enq_bits_ctrl_aluOp(q1_io_enq_bits_ctrl_aluOp),
+    .io_enq_bits_ctrl_bruOp(q1_io_enq_bits_ctrl_bruOp),
+    .io_enq_bits_ctrl_lsuOp(q1_io_enq_bits_ctrl_lsuOp),
+    .io_enq_bits_ctrl_csrOp(q1_io_enq_bits_ctrl_csrOp),
+    .io_enq_bits_ctrl_mulOp(q1_io_enq_bits_ctrl_mulOp),
+    .io_enq_bits_ctrl_divOp(q1_io_enq_bits_ctrl_divOp),
+    .io_enq_bits_ctrl_src1Type(q1_io_enq_bits_ctrl_src1Type),
+    .io_enq_bits_ctrl_src2Type(q1_io_enq_bits_ctrl_src2Type),
+    .io_enq_bits_ctrl_immType(q1_io_enq_bits_ctrl_immType),
+    .io_enq_bits_ctrl_rfWen(q1_io_enq_bits_ctrl_rfWen),
+    .io_enq_bits_ctrl_memRead(q1_io_enq_bits_ctrl_memRead),
+    .io_enq_bits_ctrl_memWrite(q1_io_enq_bits_ctrl_memWrite),
+    .io_enq_bits_ctrl_csrWen(q1_io_enq_bits_ctrl_csrWen),
+    .io_enq_bits_ctrl_isBranch(q1_io_enq_bits_ctrl_isBranch),
+    .io_enq_bits_ctrl_isJump(q1_io_enq_bits_ctrl_isJump),
+    .io_enq_bits_ctrl_isPriv(q1_io_enq_bits_ctrl_isPriv),
+    .io_enq_bits_excp_excpVec(q1_io_enq_bits_excp_excpVec),
+    .io_enq_bits_imm(q1_io_enq_bits_imm),
+    .io_enq_bits_csrAddress(q1_io_enq_bits_csrAddress),
+    .io_enq_bits_pdInfo_valid(q1_io_enq_bits_pdInfo_valid),
+    .io_enq_bits_pdInfo_isBr(q1_io_enq_bits_pdInfo_isBr),
+    .io_enq_bits_pdInfo_isJal(q1_io_enq_bits_pdInfo_isJal),
+    .io_enq_bits_pdInfo_isJalr(q1_io_enq_bits_pdInfo_isJalr),
+    .io_enq_bits_pdInfo_isCall(q1_io_enq_bits_pdInfo_isCall),
+    .io_enq_bits_pdInfo_isRet(q1_io_enq_bits_pdInfo_isRet),
+    .io_enq_bits_pdInfo_jumpTarget(q1_io_enq_bits_pdInfo_jumpTarget),
+    .io_enq_bits_bpuInfo_pc(q1_io_enq_bits_bpuInfo_pc),
+    .io_enq_bits_bpuInfo_fallThrough(q1_io_enq_bits_bpuInfo_fallThrough),
+    .io_enq_bits_bpuInfo_taken(q1_io_enq_bits_bpuInfo_taken),
+    .io_enq_bits_bpuInfo_target(q1_io_enq_bits_bpuInfo_target),
+    .io_enq_bits_bpuInfo_takenOffset(q1_io_enq_bits_bpuInfo_takenOffset),
+    .io_enq_bits_bpuInfo_meta_valid(q1_io_enq_bits_bpuInfo_meta_valid),
+    .io_enq_bits_bpuInfo_meta_btbHit(q1_io_enq_bits_bpuInfo_meta_btbHit),
+    .io_enq_bits_bpuInfo_meta_btbIsJalr(q1_io_enq_bits_bpuInfo_meta_btbIsJalr),
+    .io_enq_bits_bpuInfo_meta_btbIsJal(q1_io_enq_bits_bpuInfo_meta_btbIsJal),
+    .io_enq_bits_bpuInfo_meta_btbIsCall(q1_io_enq_bits_bpuInfo_meta_btbIsCall),
+    .io_enq_bits_bpuInfo_meta_btbIsRet(q1_io_enq_bits_bpuInfo_meta_btbIsRet),
+    .io_enq_bits_bpuInfo_meta_btbOffset(q1_io_enq_bits_bpuInfo_meta_btbOffset),
+    .io_enq_bits_bpuInfo_meta_phtCounter(q1_io_enq_bits_bpuInfo_meta_phtCounter),
+    .io_enq_bits_bpuInfo_meta_rasTop(q1_io_enq_bits_bpuInfo_meta_rasTop),
+    .io_enq_bits_bpuInfo_meta_predTaken(q1_io_enq_bits_bpuInfo_meta_predTaken),
+    .io_enq_bits_bpuInfo_meta_predTarget(q1_io_enq_bits_bpuInfo_meta_predTarget),
+    .io_enq_bits_ldst(q1_io_enq_bits_ldst),
+    .io_enq_bits_lrs1(q1_io_enq_bits_lrs1),
+    .io_enq_bits_lrs2(q1_io_enq_bits_lrs2),
+    .io_enq_bits_pdst(q1_io_enq_bits_pdst),
+    .io_enq_bits_prs1(q1_io_enq_bits_prs1),
+    .io_enq_bits_prs2(q1_io_enq_bits_prs2),
+    .io_enq_bits_oldPdst(q1_io_enq_bits_oldPdst),
+    .io_enq_bits_rs1Valid(q1_io_enq_bits_rs1Valid),
+    .io_enq_bits_rs2Valid(q1_io_enq_bits_rs2Valid),
+    .io_enq_bits_rdValid(q1_io_enq_bits_rdValid),
+    .io_enq_bits_snptId_valid(q1_io_enq_bits_snptId_valid),
+    .io_enq_bits_snptId_bits(q1_io_enq_bits_snptId_bits),
+    .io_enq_bits_robIdx_value(q1_io_enq_bits_robIdx_value),
+    .io_enq_bits_robIdx_flag(q1_io_enq_bits_robIdx_flag),
+    .io_enq_bits_robIdxFull_value(q1_io_enq_bits_robIdxFull_value),
+    .io_enq_bits_robIdxFull_flag(q1_io_enq_bits_robIdxFull_flag),
+    .io_enq_bits_lqIdx_value(q1_io_enq_bits_lqIdx_value),
+    .io_enq_bits_lqIdx_flag(q1_io_enq_bits_lqIdx_flag),
+    .io_enq_bits_sqIdx_value(q1_io_enq_bits_sqIdx_value),
+    .io_enq_bits_sqIdx_flag(q1_io_enq_bits_sqIdx_flag),
+    .io_enq_bits_issueQueue(q1_io_enq_bits_issueQueue),
+    .io_enq_bits_prs1Busy(q1_io_enq_bits_prs1Busy),
+    .io_enq_bits_prs2Busy(q1_io_enq_bits_prs2Busy),
+    .io_enq_bits_isSta(q1_io_enq_bits_isSta),
+    .io_enq_bits_isStd(q1_io_enq_bits_isStd),
+    .io_issue_ready(q1_io_issue_ready),
+    .io_issue_valid(q1_io_issue_valid),
+    .io_issue_bits_pc(q1_io_issue_bits_pc),
+    .io_issue_bits_inst(q1_io_issue_bits_inst),
+    .io_issue_bits_ctrl_fuType(q1_io_issue_bits_ctrl_fuType),
+    .io_issue_bits_ctrl_aluOp(q1_io_issue_bits_ctrl_aluOp),
+    .io_issue_bits_ctrl_bruOp(q1_io_issue_bits_ctrl_bruOp),
+    .io_issue_bits_ctrl_lsuOp(q1_io_issue_bits_ctrl_lsuOp),
+    .io_issue_bits_ctrl_csrOp(q1_io_issue_bits_ctrl_csrOp),
+    .io_issue_bits_ctrl_mulOp(q1_io_issue_bits_ctrl_mulOp),
+    .io_issue_bits_ctrl_divOp(q1_io_issue_bits_ctrl_divOp),
+    .io_issue_bits_ctrl_src1Type(q1_io_issue_bits_ctrl_src1Type),
+    .io_issue_bits_ctrl_src2Type(q1_io_issue_bits_ctrl_src2Type),
+    .io_issue_bits_ctrl_immType(q1_io_issue_bits_ctrl_immType),
+    .io_issue_bits_ctrl_rfWen(q1_io_issue_bits_ctrl_rfWen),
+    .io_issue_bits_ctrl_memRead(q1_io_issue_bits_ctrl_memRead),
+    .io_issue_bits_ctrl_memWrite(q1_io_issue_bits_ctrl_memWrite),
+    .io_issue_bits_ctrl_csrWen(q1_io_issue_bits_ctrl_csrWen),
+    .io_issue_bits_ctrl_isBranch(q1_io_issue_bits_ctrl_isBranch),
+    .io_issue_bits_ctrl_isJump(q1_io_issue_bits_ctrl_isJump),
+    .io_issue_bits_ctrl_isPriv(q1_io_issue_bits_ctrl_isPriv),
+    .io_issue_bits_excp_excpVec(q1_io_issue_bits_excp_excpVec),
+    .io_issue_bits_imm(q1_io_issue_bits_imm),
+    .io_issue_bits_csrAddress(q1_io_issue_bits_csrAddress),
+    .io_issue_bits_pdInfo_valid(q1_io_issue_bits_pdInfo_valid),
+    .io_issue_bits_pdInfo_isBr(q1_io_issue_bits_pdInfo_isBr),
+    .io_issue_bits_pdInfo_isJal(q1_io_issue_bits_pdInfo_isJal),
+    .io_issue_bits_pdInfo_isJalr(q1_io_issue_bits_pdInfo_isJalr),
+    .io_issue_bits_pdInfo_isCall(q1_io_issue_bits_pdInfo_isCall),
+    .io_issue_bits_pdInfo_isRet(q1_io_issue_bits_pdInfo_isRet),
+    .io_issue_bits_pdInfo_jumpTarget(q1_io_issue_bits_pdInfo_jumpTarget),
+    .io_issue_bits_bpuInfo_pc(q1_io_issue_bits_bpuInfo_pc),
+    .io_issue_bits_bpuInfo_fallThrough(q1_io_issue_bits_bpuInfo_fallThrough),
+    .io_issue_bits_bpuInfo_taken(q1_io_issue_bits_bpuInfo_taken),
+    .io_issue_bits_bpuInfo_target(q1_io_issue_bits_bpuInfo_target),
+    .io_issue_bits_bpuInfo_takenOffset(q1_io_issue_bits_bpuInfo_takenOffset),
+    .io_issue_bits_bpuInfo_meta_valid(q1_io_issue_bits_bpuInfo_meta_valid),
+    .io_issue_bits_bpuInfo_meta_btbHit(q1_io_issue_bits_bpuInfo_meta_btbHit),
+    .io_issue_bits_bpuInfo_meta_btbIsJalr(q1_io_issue_bits_bpuInfo_meta_btbIsJalr),
+    .io_issue_bits_bpuInfo_meta_btbIsJal(q1_io_issue_bits_bpuInfo_meta_btbIsJal),
+    .io_issue_bits_bpuInfo_meta_btbIsCall(q1_io_issue_bits_bpuInfo_meta_btbIsCall),
+    .io_issue_bits_bpuInfo_meta_btbIsRet(q1_io_issue_bits_bpuInfo_meta_btbIsRet),
+    .io_issue_bits_bpuInfo_meta_btbOffset(q1_io_issue_bits_bpuInfo_meta_btbOffset),
+    .io_issue_bits_bpuInfo_meta_phtCounter(q1_io_issue_bits_bpuInfo_meta_phtCounter),
+    .io_issue_bits_bpuInfo_meta_rasTop(q1_io_issue_bits_bpuInfo_meta_rasTop),
+    .io_issue_bits_bpuInfo_meta_predTaken(q1_io_issue_bits_bpuInfo_meta_predTaken),
+    .io_issue_bits_bpuInfo_meta_predTarget(q1_io_issue_bits_bpuInfo_meta_predTarget),
+    .io_issue_bits_ldst(q1_io_issue_bits_ldst),
+    .io_issue_bits_lrs1(q1_io_issue_bits_lrs1),
+    .io_issue_bits_lrs2(q1_io_issue_bits_lrs2),
+    .io_issue_bits_pdst(q1_io_issue_bits_pdst),
+    .io_issue_bits_prs1(q1_io_issue_bits_prs1),
+    .io_issue_bits_prs2(q1_io_issue_bits_prs2),
+    .io_issue_bits_oldPdst(q1_io_issue_bits_oldPdst),
+    .io_issue_bits_rs1Valid(q1_io_issue_bits_rs1Valid),
+    .io_issue_bits_rs2Valid(q1_io_issue_bits_rs2Valid),
+    .io_issue_bits_rdValid(q1_io_issue_bits_rdValid),
+    .io_issue_bits_snptId_valid(q1_io_issue_bits_snptId_valid),
+    .io_issue_bits_snptId_bits(q1_io_issue_bits_snptId_bits),
+    .io_issue_bits_robIdx_value(q1_io_issue_bits_robIdx_value),
+    .io_issue_bits_robIdx_flag(q1_io_issue_bits_robIdx_flag),
+    .io_issue_bits_robIdxFull_value(q1_io_issue_bits_robIdxFull_value),
+    .io_issue_bits_robIdxFull_flag(q1_io_issue_bits_robIdxFull_flag),
+    .io_issue_bits_lqIdx_value(q1_io_issue_bits_lqIdx_value),
+    .io_issue_bits_lqIdx_flag(q1_io_issue_bits_lqIdx_flag),
+    .io_issue_bits_sqIdx_value(q1_io_issue_bits_sqIdx_value),
+    .io_issue_bits_sqIdx_flag(q1_io_issue_bits_sqIdx_flag),
+    .io_issue_bits_issueQueue(q1_io_issue_bits_issueQueue),
+    .io_issue_bits_prs1Busy(q1_io_issue_bits_prs1Busy),
+    .io_issue_bits_prs2Busy(q1_io_issue_bits_prs2Busy),
+    .io_issue_bits_isSta(q1_io_issue_bits_isSta),
+    .io_issue_bits_isStd(q1_io_issue_bits_isStd),
+    .io_wakeupPorts_0_valid(q1_io_wakeupPorts_0_valid),
+    .io_wakeupPorts_0_bits_pdst(q1_io_wakeupPorts_0_bits_pdst),
+    .io_wakeupPorts_1_valid(q1_io_wakeupPorts_1_valid),
+    .io_wakeupPorts_1_bits_pdst(q1_io_wakeupPorts_1_bits_pdst),
+    .io_wakeupPorts_2_valid(q1_io_wakeupPorts_2_valid),
+    .io_wakeupPorts_2_bits_pdst(q1_io_wakeupPorts_2_bits_pdst),
+    .io_wakeupPorts_3_valid(q1_io_wakeupPorts_3_valid),
+    .io_wakeupPorts_3_bits_pdst(q1_io_wakeupPorts_3_bits_pdst),
+    .io_wakeupPorts_4_valid(q1_io_wakeupPorts_4_valid),
+    .io_wakeupPorts_4_bits_pdst(q1_io_wakeupPorts_4_bits_pdst),
+    .io_redirectInfo_valid(q1_io_redirectInfo_valid),
+    .io_redirectInfo_bits_doRedirect(q1_io_redirectInfo_bits_doRedirect),
+    .io_redirectInfo_bits_robIdx_value(q1_io_redirectInfo_bits_robIdx_value),
+    .io_redirectInfo_bits_robIdx_flag(q1_io_redirectInfo_bits_robIdx_flag),
+    .io_freeEntries(q1_io_freeEntries)
+  );
+  IssueQueue_1 q2 ( // @[src/main/scala/backend/scheduler/Scheduler.scala 53:18]
+    .clock(q2_clock),
+    .reset(q2_reset),
+    .io_enq_valid(q2_io_enq_valid),
+    .io_enq_bits_pc(q2_io_enq_bits_pc),
+    .io_enq_bits_inst(q2_io_enq_bits_inst),
+    .io_enq_bits_ctrl_fuType(q2_io_enq_bits_ctrl_fuType),
+    .io_enq_bits_ctrl_aluOp(q2_io_enq_bits_ctrl_aluOp),
+    .io_enq_bits_ctrl_bruOp(q2_io_enq_bits_ctrl_bruOp),
+    .io_enq_bits_ctrl_lsuOp(q2_io_enq_bits_ctrl_lsuOp),
+    .io_enq_bits_ctrl_csrOp(q2_io_enq_bits_ctrl_csrOp),
+    .io_enq_bits_ctrl_mulOp(q2_io_enq_bits_ctrl_mulOp),
+    .io_enq_bits_ctrl_divOp(q2_io_enq_bits_ctrl_divOp),
+    .io_enq_bits_ctrl_src1Type(q2_io_enq_bits_ctrl_src1Type),
+    .io_enq_bits_ctrl_src2Type(q2_io_enq_bits_ctrl_src2Type),
+    .io_enq_bits_ctrl_immType(q2_io_enq_bits_ctrl_immType),
+    .io_enq_bits_ctrl_rfWen(q2_io_enq_bits_ctrl_rfWen),
+    .io_enq_bits_ctrl_memRead(q2_io_enq_bits_ctrl_memRead),
+    .io_enq_bits_ctrl_memWrite(q2_io_enq_bits_ctrl_memWrite),
+    .io_enq_bits_ctrl_csrWen(q2_io_enq_bits_ctrl_csrWen),
+    .io_enq_bits_ctrl_isBranch(q2_io_enq_bits_ctrl_isBranch),
+    .io_enq_bits_ctrl_isJump(q2_io_enq_bits_ctrl_isJump),
+    .io_enq_bits_ctrl_isPriv(q2_io_enq_bits_ctrl_isPriv),
+    .io_enq_bits_excp_excpVec(q2_io_enq_bits_excp_excpVec),
+    .io_enq_bits_imm(q2_io_enq_bits_imm),
+    .io_enq_bits_csrAddress(q2_io_enq_bits_csrAddress),
+    .io_enq_bits_pdInfo_valid(q2_io_enq_bits_pdInfo_valid),
+    .io_enq_bits_pdInfo_isBr(q2_io_enq_bits_pdInfo_isBr),
+    .io_enq_bits_pdInfo_isJal(q2_io_enq_bits_pdInfo_isJal),
+    .io_enq_bits_pdInfo_isJalr(q2_io_enq_bits_pdInfo_isJalr),
+    .io_enq_bits_pdInfo_isCall(q2_io_enq_bits_pdInfo_isCall),
+    .io_enq_bits_pdInfo_isRet(q2_io_enq_bits_pdInfo_isRet),
+    .io_enq_bits_pdInfo_jumpTarget(q2_io_enq_bits_pdInfo_jumpTarget),
+    .io_enq_bits_bpuInfo_pc(q2_io_enq_bits_bpuInfo_pc),
+    .io_enq_bits_bpuInfo_fallThrough(q2_io_enq_bits_bpuInfo_fallThrough),
+    .io_enq_bits_bpuInfo_taken(q2_io_enq_bits_bpuInfo_taken),
+    .io_enq_bits_bpuInfo_target(q2_io_enq_bits_bpuInfo_target),
+    .io_enq_bits_bpuInfo_takenOffset(q2_io_enq_bits_bpuInfo_takenOffset),
+    .io_enq_bits_bpuInfo_meta_valid(q2_io_enq_bits_bpuInfo_meta_valid),
+    .io_enq_bits_bpuInfo_meta_btbHit(q2_io_enq_bits_bpuInfo_meta_btbHit),
+    .io_enq_bits_bpuInfo_meta_btbIsJalr(q2_io_enq_bits_bpuInfo_meta_btbIsJalr),
+    .io_enq_bits_bpuInfo_meta_btbIsJal(q2_io_enq_bits_bpuInfo_meta_btbIsJal),
+    .io_enq_bits_bpuInfo_meta_btbIsCall(q2_io_enq_bits_bpuInfo_meta_btbIsCall),
+    .io_enq_bits_bpuInfo_meta_btbIsRet(q2_io_enq_bits_bpuInfo_meta_btbIsRet),
+    .io_enq_bits_bpuInfo_meta_btbOffset(q2_io_enq_bits_bpuInfo_meta_btbOffset),
+    .io_enq_bits_bpuInfo_meta_phtCounter(q2_io_enq_bits_bpuInfo_meta_phtCounter),
+    .io_enq_bits_bpuInfo_meta_rasTop(q2_io_enq_bits_bpuInfo_meta_rasTop),
+    .io_enq_bits_bpuInfo_meta_predTaken(q2_io_enq_bits_bpuInfo_meta_predTaken),
+    .io_enq_bits_bpuInfo_meta_predTarget(q2_io_enq_bits_bpuInfo_meta_predTarget),
+    .io_enq_bits_ldst(q2_io_enq_bits_ldst),
+    .io_enq_bits_lrs1(q2_io_enq_bits_lrs1),
+    .io_enq_bits_lrs2(q2_io_enq_bits_lrs2),
+    .io_enq_bits_pdst(q2_io_enq_bits_pdst),
+    .io_enq_bits_prs1(q2_io_enq_bits_prs1),
+    .io_enq_bits_prs2(q2_io_enq_bits_prs2),
+    .io_enq_bits_oldPdst(q2_io_enq_bits_oldPdst),
+    .io_enq_bits_rs1Valid(q2_io_enq_bits_rs1Valid),
+    .io_enq_bits_rs2Valid(q2_io_enq_bits_rs2Valid),
+    .io_enq_bits_rdValid(q2_io_enq_bits_rdValid),
+    .io_enq_bits_snptId_valid(q2_io_enq_bits_snptId_valid),
+    .io_enq_bits_snptId_bits(q2_io_enq_bits_snptId_bits),
+    .io_enq_bits_robIdx_value(q2_io_enq_bits_robIdx_value),
+    .io_enq_bits_robIdx_flag(q2_io_enq_bits_robIdx_flag),
+    .io_enq_bits_robIdxFull_value(q2_io_enq_bits_robIdxFull_value),
+    .io_enq_bits_robIdxFull_flag(q2_io_enq_bits_robIdxFull_flag),
+    .io_enq_bits_issueQueue(q2_io_enq_bits_issueQueue),
+    .io_enq_bits_prs1Busy(q2_io_enq_bits_prs1Busy),
+    .io_enq_bits_prs2Busy(q2_io_enq_bits_prs2Busy),
+    .io_issue_ready(q2_io_issue_ready),
+    .io_issue_valid(q2_io_issue_valid),
+    .io_issue_bits_pc(q2_io_issue_bits_pc),
+    .io_issue_bits_inst(q2_io_issue_bits_inst),
+    .io_issue_bits_ctrl_fuType(q2_io_issue_bits_ctrl_fuType),
+    .io_issue_bits_ctrl_aluOp(q2_io_issue_bits_ctrl_aluOp),
+    .io_issue_bits_ctrl_bruOp(q2_io_issue_bits_ctrl_bruOp),
+    .io_issue_bits_ctrl_lsuOp(q2_io_issue_bits_ctrl_lsuOp),
+    .io_issue_bits_ctrl_csrOp(q2_io_issue_bits_ctrl_csrOp),
+    .io_issue_bits_ctrl_mulOp(q2_io_issue_bits_ctrl_mulOp),
+    .io_issue_bits_ctrl_divOp(q2_io_issue_bits_ctrl_divOp),
+    .io_issue_bits_ctrl_src1Type(q2_io_issue_bits_ctrl_src1Type),
+    .io_issue_bits_ctrl_src2Type(q2_io_issue_bits_ctrl_src2Type),
+    .io_issue_bits_ctrl_immType(q2_io_issue_bits_ctrl_immType),
+    .io_issue_bits_ctrl_rfWen(q2_io_issue_bits_ctrl_rfWen),
+    .io_issue_bits_ctrl_memRead(q2_io_issue_bits_ctrl_memRead),
+    .io_issue_bits_ctrl_memWrite(q2_io_issue_bits_ctrl_memWrite),
+    .io_issue_bits_ctrl_csrWen(q2_io_issue_bits_ctrl_csrWen),
+    .io_issue_bits_ctrl_isBranch(q2_io_issue_bits_ctrl_isBranch),
+    .io_issue_bits_ctrl_isJump(q2_io_issue_bits_ctrl_isJump),
+    .io_issue_bits_ctrl_isPriv(q2_io_issue_bits_ctrl_isPriv),
+    .io_issue_bits_excp_excpVec(q2_io_issue_bits_excp_excpVec),
+    .io_issue_bits_imm(q2_io_issue_bits_imm),
+    .io_issue_bits_csrAddress(q2_io_issue_bits_csrAddress),
+    .io_issue_bits_pdInfo_valid(q2_io_issue_bits_pdInfo_valid),
+    .io_issue_bits_pdInfo_isBr(q2_io_issue_bits_pdInfo_isBr),
+    .io_issue_bits_pdInfo_isJal(q2_io_issue_bits_pdInfo_isJal),
+    .io_issue_bits_pdInfo_isJalr(q2_io_issue_bits_pdInfo_isJalr),
+    .io_issue_bits_pdInfo_isCall(q2_io_issue_bits_pdInfo_isCall),
+    .io_issue_bits_pdInfo_isRet(q2_io_issue_bits_pdInfo_isRet),
+    .io_issue_bits_pdInfo_jumpTarget(q2_io_issue_bits_pdInfo_jumpTarget),
+    .io_issue_bits_bpuInfo_pc(q2_io_issue_bits_bpuInfo_pc),
+    .io_issue_bits_bpuInfo_fallThrough(q2_io_issue_bits_bpuInfo_fallThrough),
+    .io_issue_bits_bpuInfo_taken(q2_io_issue_bits_bpuInfo_taken),
+    .io_issue_bits_bpuInfo_target(q2_io_issue_bits_bpuInfo_target),
+    .io_issue_bits_bpuInfo_takenOffset(q2_io_issue_bits_bpuInfo_takenOffset),
+    .io_issue_bits_bpuInfo_meta_valid(q2_io_issue_bits_bpuInfo_meta_valid),
+    .io_issue_bits_bpuInfo_meta_btbHit(q2_io_issue_bits_bpuInfo_meta_btbHit),
+    .io_issue_bits_bpuInfo_meta_btbIsJalr(q2_io_issue_bits_bpuInfo_meta_btbIsJalr),
+    .io_issue_bits_bpuInfo_meta_btbIsJal(q2_io_issue_bits_bpuInfo_meta_btbIsJal),
+    .io_issue_bits_bpuInfo_meta_btbIsCall(q2_io_issue_bits_bpuInfo_meta_btbIsCall),
+    .io_issue_bits_bpuInfo_meta_btbIsRet(q2_io_issue_bits_bpuInfo_meta_btbIsRet),
+    .io_issue_bits_bpuInfo_meta_btbOffset(q2_io_issue_bits_bpuInfo_meta_btbOffset),
+    .io_issue_bits_bpuInfo_meta_phtCounter(q2_io_issue_bits_bpuInfo_meta_phtCounter),
+    .io_issue_bits_bpuInfo_meta_rasTop(q2_io_issue_bits_bpuInfo_meta_rasTop),
+    .io_issue_bits_bpuInfo_meta_predTaken(q2_io_issue_bits_bpuInfo_meta_predTaken),
+    .io_issue_bits_bpuInfo_meta_predTarget(q2_io_issue_bits_bpuInfo_meta_predTarget),
+    .io_issue_bits_ldst(q2_io_issue_bits_ldst),
+    .io_issue_bits_lrs1(q2_io_issue_bits_lrs1),
+    .io_issue_bits_lrs2(q2_io_issue_bits_lrs2),
+    .io_issue_bits_pdst(q2_io_issue_bits_pdst),
+    .io_issue_bits_prs1(q2_io_issue_bits_prs1),
+    .io_issue_bits_prs2(q2_io_issue_bits_prs2),
+    .io_issue_bits_oldPdst(q2_io_issue_bits_oldPdst),
+    .io_issue_bits_rs1Valid(q2_io_issue_bits_rs1Valid),
+    .io_issue_bits_rs2Valid(q2_io_issue_bits_rs2Valid),
+    .io_issue_bits_rdValid(q2_io_issue_bits_rdValid),
+    .io_issue_bits_snptId_valid(q2_io_issue_bits_snptId_valid),
+    .io_issue_bits_snptId_bits(q2_io_issue_bits_snptId_bits),
+    .io_issue_bits_robIdx_value(q2_io_issue_bits_robIdx_value),
+    .io_issue_bits_robIdx_flag(q2_io_issue_bits_robIdx_flag),
+    .io_issue_bits_robIdxFull_value(q2_io_issue_bits_robIdxFull_value),
+    .io_issue_bits_robIdxFull_flag(q2_io_issue_bits_robIdxFull_flag),
+    .io_issue_bits_issueQueue(q2_io_issue_bits_issueQueue),
+    .io_issue_bits_prs1Busy(q2_io_issue_bits_prs1Busy),
+    .io_issue_bits_prs2Busy(q2_io_issue_bits_prs2Busy),
+    .io_wakeupPorts_0_valid(q2_io_wakeupPorts_0_valid),
+    .io_wakeupPorts_0_bits_pdst(q2_io_wakeupPorts_0_bits_pdst),
+    .io_wakeupPorts_1_valid(q2_io_wakeupPorts_1_valid),
+    .io_wakeupPorts_1_bits_pdst(q2_io_wakeupPorts_1_bits_pdst),
+    .io_wakeupPorts_2_valid(q2_io_wakeupPorts_2_valid),
+    .io_wakeupPorts_2_bits_pdst(q2_io_wakeupPorts_2_bits_pdst),
+    .io_wakeupPorts_3_valid(q2_io_wakeupPorts_3_valid),
+    .io_wakeupPorts_3_bits_pdst(q2_io_wakeupPorts_3_bits_pdst),
+    .io_wakeupPorts_4_valid(q2_io_wakeupPorts_4_valid),
+    .io_wakeupPorts_4_bits_pdst(q2_io_wakeupPorts_4_bits_pdst),
+    .io_redirectInfo_valid(q2_io_redirectInfo_valid),
+    .io_redirectInfo_bits_doRedirect(q2_io_redirectInfo_bits_doRedirect),
+    .io_redirectInfo_bits_robIdx_value(q2_io_redirectInfo_bits_robIdx_value),
+    .io_redirectInfo_bits_robIdx_flag(q2_io_redirectInfo_bits_robIdx_flag),
+    .io_freeEntries(q2_io_freeEntries)
+  );
+  IssueQueue q3 ( // @[src/main/scala/backend/scheduler/Scheduler.scala 54:18]
+    .clock(q3_clock),
+    .reset(q3_reset),
+    .io_enq_valid(q3_io_enq_valid),
+    .io_enq_bits_pc(q3_io_enq_bits_pc),
+    .io_enq_bits_inst(q3_io_enq_bits_inst),
+    .io_enq_bits_ctrl_fuType(q3_io_enq_bits_ctrl_fuType),
+    .io_enq_bits_ctrl_aluOp(q3_io_enq_bits_ctrl_aluOp),
+    .io_enq_bits_ctrl_bruOp(q3_io_enq_bits_ctrl_bruOp),
+    .io_enq_bits_ctrl_lsuOp(q3_io_enq_bits_ctrl_lsuOp),
+    .io_enq_bits_ctrl_csrOp(q3_io_enq_bits_ctrl_csrOp),
+    .io_enq_bits_ctrl_mulOp(q3_io_enq_bits_ctrl_mulOp),
+    .io_enq_bits_ctrl_divOp(q3_io_enq_bits_ctrl_divOp),
+    .io_enq_bits_ctrl_src1Type(q3_io_enq_bits_ctrl_src1Type),
+    .io_enq_bits_ctrl_src2Type(q3_io_enq_bits_ctrl_src2Type),
+    .io_enq_bits_ctrl_immType(q3_io_enq_bits_ctrl_immType),
+    .io_enq_bits_ctrl_rfWen(q3_io_enq_bits_ctrl_rfWen),
+    .io_enq_bits_ctrl_memRead(q3_io_enq_bits_ctrl_memRead),
+    .io_enq_bits_ctrl_memWrite(q3_io_enq_bits_ctrl_memWrite),
+    .io_enq_bits_ctrl_csrWen(q3_io_enq_bits_ctrl_csrWen),
+    .io_enq_bits_ctrl_isBranch(q3_io_enq_bits_ctrl_isBranch),
+    .io_enq_bits_ctrl_isJump(q3_io_enq_bits_ctrl_isJump),
+    .io_enq_bits_ctrl_isPriv(q3_io_enq_bits_ctrl_isPriv),
+    .io_enq_bits_excp_excpVec(q3_io_enq_bits_excp_excpVec),
+    .io_enq_bits_imm(q3_io_enq_bits_imm),
+    .io_enq_bits_csrAddress(q3_io_enq_bits_csrAddress),
+    .io_enq_bits_pdInfo_valid(q3_io_enq_bits_pdInfo_valid),
+    .io_enq_bits_pdInfo_isBr(q3_io_enq_bits_pdInfo_isBr),
+    .io_enq_bits_pdInfo_isJal(q3_io_enq_bits_pdInfo_isJal),
+    .io_enq_bits_pdInfo_isJalr(q3_io_enq_bits_pdInfo_isJalr),
+    .io_enq_bits_pdInfo_isCall(q3_io_enq_bits_pdInfo_isCall),
+    .io_enq_bits_pdInfo_isRet(q3_io_enq_bits_pdInfo_isRet),
+    .io_enq_bits_pdInfo_jumpTarget(q3_io_enq_bits_pdInfo_jumpTarget),
+    .io_enq_bits_bpuInfo_pc(q3_io_enq_bits_bpuInfo_pc),
+    .io_enq_bits_bpuInfo_fallThrough(q3_io_enq_bits_bpuInfo_fallThrough),
+    .io_enq_bits_bpuInfo_taken(q3_io_enq_bits_bpuInfo_taken),
+    .io_enq_bits_bpuInfo_target(q3_io_enq_bits_bpuInfo_target),
+    .io_enq_bits_bpuInfo_takenOffset(q3_io_enq_bits_bpuInfo_takenOffset),
+    .io_enq_bits_bpuInfo_meta_valid(q3_io_enq_bits_bpuInfo_meta_valid),
+    .io_enq_bits_bpuInfo_meta_btbHit(q3_io_enq_bits_bpuInfo_meta_btbHit),
+    .io_enq_bits_bpuInfo_meta_btbIsJalr(q3_io_enq_bits_bpuInfo_meta_btbIsJalr),
+    .io_enq_bits_bpuInfo_meta_btbIsJal(q3_io_enq_bits_bpuInfo_meta_btbIsJal),
+    .io_enq_bits_bpuInfo_meta_btbIsCall(q3_io_enq_bits_bpuInfo_meta_btbIsCall),
+    .io_enq_bits_bpuInfo_meta_btbIsRet(q3_io_enq_bits_bpuInfo_meta_btbIsRet),
+    .io_enq_bits_bpuInfo_meta_btbOffset(q3_io_enq_bits_bpuInfo_meta_btbOffset),
+    .io_enq_bits_bpuInfo_meta_phtCounter(q3_io_enq_bits_bpuInfo_meta_phtCounter),
+    .io_enq_bits_bpuInfo_meta_rasTop(q3_io_enq_bits_bpuInfo_meta_rasTop),
+    .io_enq_bits_bpuInfo_meta_predTaken(q3_io_enq_bits_bpuInfo_meta_predTaken),
+    .io_enq_bits_bpuInfo_meta_predTarget(q3_io_enq_bits_bpuInfo_meta_predTarget),
+    .io_enq_bits_ldst(q3_io_enq_bits_ldst),
+    .io_enq_bits_lrs1(q3_io_enq_bits_lrs1),
+    .io_enq_bits_lrs2(q3_io_enq_bits_lrs2),
+    .io_enq_bits_pdst(q3_io_enq_bits_pdst),
+    .io_enq_bits_prs1(q3_io_enq_bits_prs1),
+    .io_enq_bits_prs2(q3_io_enq_bits_prs2),
+    .io_enq_bits_oldPdst(q3_io_enq_bits_oldPdst),
+    .io_enq_bits_rs1Valid(q3_io_enq_bits_rs1Valid),
+    .io_enq_bits_rs2Valid(q3_io_enq_bits_rs2Valid),
+    .io_enq_bits_rdValid(q3_io_enq_bits_rdValid),
+    .io_enq_bits_snptId_valid(q3_io_enq_bits_snptId_valid),
+    .io_enq_bits_snptId_bits(q3_io_enq_bits_snptId_bits),
+    .io_enq_bits_robIdx_value(q3_io_enq_bits_robIdx_value),
+    .io_enq_bits_robIdx_flag(q3_io_enq_bits_robIdx_flag),
+    .io_enq_bits_robIdxFull_value(q3_io_enq_bits_robIdxFull_value),
+    .io_enq_bits_robIdxFull_flag(q3_io_enq_bits_robIdxFull_flag),
+    .io_enq_bits_lqIdx_value(q3_io_enq_bits_lqIdx_value),
+    .io_enq_bits_lqIdx_flag(q3_io_enq_bits_lqIdx_flag),
+    .io_enq_bits_sqIdx_value(q3_io_enq_bits_sqIdx_value),
+    .io_enq_bits_sqIdx_flag(q3_io_enq_bits_sqIdx_flag),
+    .io_enq_bits_issueQueue(q3_io_enq_bits_issueQueue),
+    .io_enq_bits_prs1Busy(q3_io_enq_bits_prs1Busy),
+    .io_enq_bits_prs2Busy(q3_io_enq_bits_prs2Busy),
+    .io_enq_bits_isSta(q3_io_enq_bits_isSta),
+    .io_enq_bits_isStd(q3_io_enq_bits_isStd),
+    .io_issue_ready(q3_io_issue_ready),
+    .io_issue_valid(q3_io_issue_valid),
+    .io_issue_bits_pc(q3_io_issue_bits_pc),
+    .io_issue_bits_inst(q3_io_issue_bits_inst),
+    .io_issue_bits_ctrl_fuType(q3_io_issue_bits_ctrl_fuType),
+    .io_issue_bits_ctrl_aluOp(q3_io_issue_bits_ctrl_aluOp),
+    .io_issue_bits_ctrl_bruOp(q3_io_issue_bits_ctrl_bruOp),
+    .io_issue_bits_ctrl_lsuOp(q3_io_issue_bits_ctrl_lsuOp),
+    .io_issue_bits_ctrl_csrOp(q3_io_issue_bits_ctrl_csrOp),
+    .io_issue_bits_ctrl_mulOp(q3_io_issue_bits_ctrl_mulOp),
+    .io_issue_bits_ctrl_divOp(q3_io_issue_bits_ctrl_divOp),
+    .io_issue_bits_ctrl_src1Type(q3_io_issue_bits_ctrl_src1Type),
+    .io_issue_bits_ctrl_src2Type(q3_io_issue_bits_ctrl_src2Type),
+    .io_issue_bits_ctrl_immType(q3_io_issue_bits_ctrl_immType),
+    .io_issue_bits_ctrl_rfWen(q3_io_issue_bits_ctrl_rfWen),
+    .io_issue_bits_ctrl_memRead(q3_io_issue_bits_ctrl_memRead),
+    .io_issue_bits_ctrl_memWrite(q3_io_issue_bits_ctrl_memWrite),
+    .io_issue_bits_ctrl_csrWen(q3_io_issue_bits_ctrl_csrWen),
+    .io_issue_bits_ctrl_isBranch(q3_io_issue_bits_ctrl_isBranch),
+    .io_issue_bits_ctrl_isJump(q3_io_issue_bits_ctrl_isJump),
+    .io_issue_bits_ctrl_isPriv(q3_io_issue_bits_ctrl_isPriv),
+    .io_issue_bits_excp_excpVec(q3_io_issue_bits_excp_excpVec),
+    .io_issue_bits_imm(q3_io_issue_bits_imm),
+    .io_issue_bits_csrAddress(q3_io_issue_bits_csrAddress),
+    .io_issue_bits_pdInfo_valid(q3_io_issue_bits_pdInfo_valid),
+    .io_issue_bits_pdInfo_isBr(q3_io_issue_bits_pdInfo_isBr),
+    .io_issue_bits_pdInfo_isJal(q3_io_issue_bits_pdInfo_isJal),
+    .io_issue_bits_pdInfo_isJalr(q3_io_issue_bits_pdInfo_isJalr),
+    .io_issue_bits_pdInfo_isCall(q3_io_issue_bits_pdInfo_isCall),
+    .io_issue_bits_pdInfo_isRet(q3_io_issue_bits_pdInfo_isRet),
+    .io_issue_bits_pdInfo_jumpTarget(q3_io_issue_bits_pdInfo_jumpTarget),
+    .io_issue_bits_bpuInfo_pc(q3_io_issue_bits_bpuInfo_pc),
+    .io_issue_bits_bpuInfo_fallThrough(q3_io_issue_bits_bpuInfo_fallThrough),
+    .io_issue_bits_bpuInfo_taken(q3_io_issue_bits_bpuInfo_taken),
+    .io_issue_bits_bpuInfo_target(q3_io_issue_bits_bpuInfo_target),
+    .io_issue_bits_bpuInfo_takenOffset(q3_io_issue_bits_bpuInfo_takenOffset),
+    .io_issue_bits_bpuInfo_meta_valid(q3_io_issue_bits_bpuInfo_meta_valid),
+    .io_issue_bits_bpuInfo_meta_btbHit(q3_io_issue_bits_bpuInfo_meta_btbHit),
+    .io_issue_bits_bpuInfo_meta_btbIsJalr(q3_io_issue_bits_bpuInfo_meta_btbIsJalr),
+    .io_issue_bits_bpuInfo_meta_btbIsJal(q3_io_issue_bits_bpuInfo_meta_btbIsJal),
+    .io_issue_bits_bpuInfo_meta_btbIsCall(q3_io_issue_bits_bpuInfo_meta_btbIsCall),
+    .io_issue_bits_bpuInfo_meta_btbIsRet(q3_io_issue_bits_bpuInfo_meta_btbIsRet),
+    .io_issue_bits_bpuInfo_meta_btbOffset(q3_io_issue_bits_bpuInfo_meta_btbOffset),
+    .io_issue_bits_bpuInfo_meta_phtCounter(q3_io_issue_bits_bpuInfo_meta_phtCounter),
+    .io_issue_bits_bpuInfo_meta_rasTop(q3_io_issue_bits_bpuInfo_meta_rasTop),
+    .io_issue_bits_bpuInfo_meta_predTaken(q3_io_issue_bits_bpuInfo_meta_predTaken),
+    .io_issue_bits_bpuInfo_meta_predTarget(q3_io_issue_bits_bpuInfo_meta_predTarget),
+    .io_issue_bits_ldst(q3_io_issue_bits_ldst),
+    .io_issue_bits_lrs1(q3_io_issue_bits_lrs1),
+    .io_issue_bits_lrs2(q3_io_issue_bits_lrs2),
+    .io_issue_bits_pdst(q3_io_issue_bits_pdst),
+    .io_issue_bits_prs1(q3_io_issue_bits_prs1),
+    .io_issue_bits_prs2(q3_io_issue_bits_prs2),
+    .io_issue_bits_oldPdst(q3_io_issue_bits_oldPdst),
+    .io_issue_bits_rs1Valid(q3_io_issue_bits_rs1Valid),
+    .io_issue_bits_rs2Valid(q3_io_issue_bits_rs2Valid),
+    .io_issue_bits_rdValid(q3_io_issue_bits_rdValid),
+    .io_issue_bits_snptId_valid(q3_io_issue_bits_snptId_valid),
+    .io_issue_bits_snptId_bits(q3_io_issue_bits_snptId_bits),
+    .io_issue_bits_robIdx_value(q3_io_issue_bits_robIdx_value),
+    .io_issue_bits_robIdx_flag(q3_io_issue_bits_robIdx_flag),
+    .io_issue_bits_robIdxFull_value(q3_io_issue_bits_robIdxFull_value),
+    .io_issue_bits_robIdxFull_flag(q3_io_issue_bits_robIdxFull_flag),
+    .io_issue_bits_lqIdx_value(q3_io_issue_bits_lqIdx_value),
+    .io_issue_bits_lqIdx_flag(q3_io_issue_bits_lqIdx_flag),
+    .io_issue_bits_sqIdx_value(q3_io_issue_bits_sqIdx_value),
+    .io_issue_bits_sqIdx_flag(q3_io_issue_bits_sqIdx_flag),
+    .io_issue_bits_issueQueue(q3_io_issue_bits_issueQueue),
+    .io_issue_bits_prs1Busy(q3_io_issue_bits_prs1Busy),
+    .io_issue_bits_prs2Busy(q3_io_issue_bits_prs2Busy),
+    .io_issue_bits_isSta(q3_io_issue_bits_isSta),
+    .io_issue_bits_isStd(q3_io_issue_bits_isStd),
+    .io_wakeupPorts_0_valid(q3_io_wakeupPorts_0_valid),
+    .io_wakeupPorts_0_bits_pdst(q3_io_wakeupPorts_0_bits_pdst),
+    .io_wakeupPorts_1_valid(q3_io_wakeupPorts_1_valid),
+    .io_wakeupPorts_1_bits_pdst(q3_io_wakeupPorts_1_bits_pdst),
+    .io_wakeupPorts_2_valid(q3_io_wakeupPorts_2_valid),
+    .io_wakeupPorts_2_bits_pdst(q3_io_wakeupPorts_2_bits_pdst),
+    .io_wakeupPorts_3_valid(q3_io_wakeupPorts_3_valid),
+    .io_wakeupPorts_3_bits_pdst(q3_io_wakeupPorts_3_bits_pdst),
+    .io_wakeupPorts_4_valid(q3_io_wakeupPorts_4_valid),
+    .io_wakeupPorts_4_bits_pdst(q3_io_wakeupPorts_4_bits_pdst),
+    .io_redirectInfo_valid(q3_io_redirectInfo_valid),
+    .io_redirectInfo_bits_doRedirect(q3_io_redirectInfo_bits_doRedirect),
+    .io_redirectInfo_bits_robIdx_value(q3_io_redirectInfo_bits_robIdx_value),
+    .io_redirectInfo_bits_robIdx_flag(q3_io_redirectInfo_bits_robIdx_flag),
+    .io_freeEntries(q3_io_freeEntries)
+  );
+  IssueQueue q4 ( // @[src/main/scala/backend/scheduler/Scheduler.scala 55:18]
+    .clock(q4_clock),
+    .reset(q4_reset),
+    .io_enq_valid(q4_io_enq_valid),
+    .io_enq_bits_pc(q4_io_enq_bits_pc),
+    .io_enq_bits_inst(q4_io_enq_bits_inst),
+    .io_enq_bits_ctrl_fuType(q4_io_enq_bits_ctrl_fuType),
+    .io_enq_bits_ctrl_aluOp(q4_io_enq_bits_ctrl_aluOp),
+    .io_enq_bits_ctrl_bruOp(q4_io_enq_bits_ctrl_bruOp),
+    .io_enq_bits_ctrl_lsuOp(q4_io_enq_bits_ctrl_lsuOp),
+    .io_enq_bits_ctrl_csrOp(q4_io_enq_bits_ctrl_csrOp),
+    .io_enq_bits_ctrl_mulOp(q4_io_enq_bits_ctrl_mulOp),
+    .io_enq_bits_ctrl_divOp(q4_io_enq_bits_ctrl_divOp),
+    .io_enq_bits_ctrl_src1Type(q4_io_enq_bits_ctrl_src1Type),
+    .io_enq_bits_ctrl_src2Type(q4_io_enq_bits_ctrl_src2Type),
+    .io_enq_bits_ctrl_immType(q4_io_enq_bits_ctrl_immType),
+    .io_enq_bits_ctrl_rfWen(q4_io_enq_bits_ctrl_rfWen),
+    .io_enq_bits_ctrl_memRead(q4_io_enq_bits_ctrl_memRead),
+    .io_enq_bits_ctrl_memWrite(q4_io_enq_bits_ctrl_memWrite),
+    .io_enq_bits_ctrl_csrWen(q4_io_enq_bits_ctrl_csrWen),
+    .io_enq_bits_ctrl_isBranch(q4_io_enq_bits_ctrl_isBranch),
+    .io_enq_bits_ctrl_isJump(q4_io_enq_bits_ctrl_isJump),
+    .io_enq_bits_ctrl_isPriv(q4_io_enq_bits_ctrl_isPriv),
+    .io_enq_bits_excp_excpVec(q4_io_enq_bits_excp_excpVec),
+    .io_enq_bits_imm(q4_io_enq_bits_imm),
+    .io_enq_bits_csrAddress(q4_io_enq_bits_csrAddress),
+    .io_enq_bits_pdInfo_valid(q4_io_enq_bits_pdInfo_valid),
+    .io_enq_bits_pdInfo_isBr(q4_io_enq_bits_pdInfo_isBr),
+    .io_enq_bits_pdInfo_isJal(q4_io_enq_bits_pdInfo_isJal),
+    .io_enq_bits_pdInfo_isJalr(q4_io_enq_bits_pdInfo_isJalr),
+    .io_enq_bits_pdInfo_isCall(q4_io_enq_bits_pdInfo_isCall),
+    .io_enq_bits_pdInfo_isRet(q4_io_enq_bits_pdInfo_isRet),
+    .io_enq_bits_pdInfo_jumpTarget(q4_io_enq_bits_pdInfo_jumpTarget),
+    .io_enq_bits_bpuInfo_pc(q4_io_enq_bits_bpuInfo_pc),
+    .io_enq_bits_bpuInfo_fallThrough(q4_io_enq_bits_bpuInfo_fallThrough),
+    .io_enq_bits_bpuInfo_taken(q4_io_enq_bits_bpuInfo_taken),
+    .io_enq_bits_bpuInfo_target(q4_io_enq_bits_bpuInfo_target),
+    .io_enq_bits_bpuInfo_takenOffset(q4_io_enq_bits_bpuInfo_takenOffset),
+    .io_enq_bits_bpuInfo_meta_valid(q4_io_enq_bits_bpuInfo_meta_valid),
+    .io_enq_bits_bpuInfo_meta_btbHit(q4_io_enq_bits_bpuInfo_meta_btbHit),
+    .io_enq_bits_bpuInfo_meta_btbIsJalr(q4_io_enq_bits_bpuInfo_meta_btbIsJalr),
+    .io_enq_bits_bpuInfo_meta_btbIsJal(q4_io_enq_bits_bpuInfo_meta_btbIsJal),
+    .io_enq_bits_bpuInfo_meta_btbIsCall(q4_io_enq_bits_bpuInfo_meta_btbIsCall),
+    .io_enq_bits_bpuInfo_meta_btbIsRet(q4_io_enq_bits_bpuInfo_meta_btbIsRet),
+    .io_enq_bits_bpuInfo_meta_btbOffset(q4_io_enq_bits_bpuInfo_meta_btbOffset),
+    .io_enq_bits_bpuInfo_meta_phtCounter(q4_io_enq_bits_bpuInfo_meta_phtCounter),
+    .io_enq_bits_bpuInfo_meta_rasTop(q4_io_enq_bits_bpuInfo_meta_rasTop),
+    .io_enq_bits_bpuInfo_meta_predTaken(q4_io_enq_bits_bpuInfo_meta_predTaken),
+    .io_enq_bits_bpuInfo_meta_predTarget(q4_io_enq_bits_bpuInfo_meta_predTarget),
+    .io_enq_bits_ldst(q4_io_enq_bits_ldst),
+    .io_enq_bits_lrs1(q4_io_enq_bits_lrs1),
+    .io_enq_bits_lrs2(q4_io_enq_bits_lrs2),
+    .io_enq_bits_pdst(q4_io_enq_bits_pdst),
+    .io_enq_bits_prs1(q4_io_enq_bits_prs1),
+    .io_enq_bits_prs2(q4_io_enq_bits_prs2),
+    .io_enq_bits_oldPdst(q4_io_enq_bits_oldPdst),
+    .io_enq_bits_rs1Valid(q4_io_enq_bits_rs1Valid),
+    .io_enq_bits_rs2Valid(q4_io_enq_bits_rs2Valid),
+    .io_enq_bits_rdValid(q4_io_enq_bits_rdValid),
+    .io_enq_bits_snptId_valid(q4_io_enq_bits_snptId_valid),
+    .io_enq_bits_snptId_bits(q4_io_enq_bits_snptId_bits),
+    .io_enq_bits_robIdx_value(q4_io_enq_bits_robIdx_value),
+    .io_enq_bits_robIdx_flag(q4_io_enq_bits_robIdx_flag),
+    .io_enq_bits_robIdxFull_value(q4_io_enq_bits_robIdxFull_value),
+    .io_enq_bits_robIdxFull_flag(q4_io_enq_bits_robIdxFull_flag),
+    .io_enq_bits_lqIdx_value(q4_io_enq_bits_lqIdx_value),
+    .io_enq_bits_lqIdx_flag(q4_io_enq_bits_lqIdx_flag),
+    .io_enq_bits_sqIdx_value(q4_io_enq_bits_sqIdx_value),
+    .io_enq_bits_sqIdx_flag(q4_io_enq_bits_sqIdx_flag),
+    .io_enq_bits_issueQueue(q4_io_enq_bits_issueQueue),
+    .io_enq_bits_prs1Busy(q4_io_enq_bits_prs1Busy),
+    .io_enq_bits_prs2Busy(q4_io_enq_bits_prs2Busy),
+    .io_enq_bits_isSta(q4_io_enq_bits_isSta),
+    .io_enq_bits_isStd(q4_io_enq_bits_isStd),
+    .io_issue_ready(q4_io_issue_ready),
+    .io_issue_valid(q4_io_issue_valid),
+    .io_issue_bits_pc(q4_io_issue_bits_pc),
+    .io_issue_bits_inst(q4_io_issue_bits_inst),
+    .io_issue_bits_ctrl_fuType(q4_io_issue_bits_ctrl_fuType),
+    .io_issue_bits_ctrl_aluOp(q4_io_issue_bits_ctrl_aluOp),
+    .io_issue_bits_ctrl_bruOp(q4_io_issue_bits_ctrl_bruOp),
+    .io_issue_bits_ctrl_lsuOp(q4_io_issue_bits_ctrl_lsuOp),
+    .io_issue_bits_ctrl_csrOp(q4_io_issue_bits_ctrl_csrOp),
+    .io_issue_bits_ctrl_mulOp(q4_io_issue_bits_ctrl_mulOp),
+    .io_issue_bits_ctrl_divOp(q4_io_issue_bits_ctrl_divOp),
+    .io_issue_bits_ctrl_src1Type(q4_io_issue_bits_ctrl_src1Type),
+    .io_issue_bits_ctrl_src2Type(q4_io_issue_bits_ctrl_src2Type),
+    .io_issue_bits_ctrl_immType(q4_io_issue_bits_ctrl_immType),
+    .io_issue_bits_ctrl_rfWen(q4_io_issue_bits_ctrl_rfWen),
+    .io_issue_bits_ctrl_memRead(q4_io_issue_bits_ctrl_memRead),
+    .io_issue_bits_ctrl_memWrite(q4_io_issue_bits_ctrl_memWrite),
+    .io_issue_bits_ctrl_csrWen(q4_io_issue_bits_ctrl_csrWen),
+    .io_issue_bits_ctrl_isBranch(q4_io_issue_bits_ctrl_isBranch),
+    .io_issue_bits_ctrl_isJump(q4_io_issue_bits_ctrl_isJump),
+    .io_issue_bits_ctrl_isPriv(q4_io_issue_bits_ctrl_isPriv),
+    .io_issue_bits_excp_excpVec(q4_io_issue_bits_excp_excpVec),
+    .io_issue_bits_imm(q4_io_issue_bits_imm),
+    .io_issue_bits_csrAddress(q4_io_issue_bits_csrAddress),
+    .io_issue_bits_pdInfo_valid(q4_io_issue_bits_pdInfo_valid),
+    .io_issue_bits_pdInfo_isBr(q4_io_issue_bits_pdInfo_isBr),
+    .io_issue_bits_pdInfo_isJal(q4_io_issue_bits_pdInfo_isJal),
+    .io_issue_bits_pdInfo_isJalr(q4_io_issue_bits_pdInfo_isJalr),
+    .io_issue_bits_pdInfo_isCall(q4_io_issue_bits_pdInfo_isCall),
+    .io_issue_bits_pdInfo_isRet(q4_io_issue_bits_pdInfo_isRet),
+    .io_issue_bits_pdInfo_jumpTarget(q4_io_issue_bits_pdInfo_jumpTarget),
+    .io_issue_bits_bpuInfo_pc(q4_io_issue_bits_bpuInfo_pc),
+    .io_issue_bits_bpuInfo_fallThrough(q4_io_issue_bits_bpuInfo_fallThrough),
+    .io_issue_bits_bpuInfo_taken(q4_io_issue_bits_bpuInfo_taken),
+    .io_issue_bits_bpuInfo_target(q4_io_issue_bits_bpuInfo_target),
+    .io_issue_bits_bpuInfo_takenOffset(q4_io_issue_bits_bpuInfo_takenOffset),
+    .io_issue_bits_bpuInfo_meta_valid(q4_io_issue_bits_bpuInfo_meta_valid),
+    .io_issue_bits_bpuInfo_meta_btbHit(q4_io_issue_bits_bpuInfo_meta_btbHit),
+    .io_issue_bits_bpuInfo_meta_btbIsJalr(q4_io_issue_bits_bpuInfo_meta_btbIsJalr),
+    .io_issue_bits_bpuInfo_meta_btbIsJal(q4_io_issue_bits_bpuInfo_meta_btbIsJal),
+    .io_issue_bits_bpuInfo_meta_btbIsCall(q4_io_issue_bits_bpuInfo_meta_btbIsCall),
+    .io_issue_bits_bpuInfo_meta_btbIsRet(q4_io_issue_bits_bpuInfo_meta_btbIsRet),
+    .io_issue_bits_bpuInfo_meta_btbOffset(q4_io_issue_bits_bpuInfo_meta_btbOffset),
+    .io_issue_bits_bpuInfo_meta_phtCounter(q4_io_issue_bits_bpuInfo_meta_phtCounter),
+    .io_issue_bits_bpuInfo_meta_rasTop(q4_io_issue_bits_bpuInfo_meta_rasTop),
+    .io_issue_bits_bpuInfo_meta_predTaken(q4_io_issue_bits_bpuInfo_meta_predTaken),
+    .io_issue_bits_bpuInfo_meta_predTarget(q4_io_issue_bits_bpuInfo_meta_predTarget),
+    .io_issue_bits_ldst(q4_io_issue_bits_ldst),
+    .io_issue_bits_lrs1(q4_io_issue_bits_lrs1),
+    .io_issue_bits_lrs2(q4_io_issue_bits_lrs2),
+    .io_issue_bits_pdst(q4_io_issue_bits_pdst),
+    .io_issue_bits_prs1(q4_io_issue_bits_prs1),
+    .io_issue_bits_prs2(q4_io_issue_bits_prs2),
+    .io_issue_bits_oldPdst(q4_io_issue_bits_oldPdst),
+    .io_issue_bits_rs1Valid(q4_io_issue_bits_rs1Valid),
+    .io_issue_bits_rs2Valid(q4_io_issue_bits_rs2Valid),
+    .io_issue_bits_rdValid(q4_io_issue_bits_rdValid),
+    .io_issue_bits_snptId_valid(q4_io_issue_bits_snptId_valid),
+    .io_issue_bits_snptId_bits(q4_io_issue_bits_snptId_bits),
+    .io_issue_bits_robIdx_value(q4_io_issue_bits_robIdx_value),
+    .io_issue_bits_robIdx_flag(q4_io_issue_bits_robIdx_flag),
+    .io_issue_bits_robIdxFull_value(q4_io_issue_bits_robIdxFull_value),
+    .io_issue_bits_robIdxFull_flag(q4_io_issue_bits_robIdxFull_flag),
+    .io_issue_bits_lqIdx_value(q4_io_issue_bits_lqIdx_value),
+    .io_issue_bits_lqIdx_flag(q4_io_issue_bits_lqIdx_flag),
+    .io_issue_bits_sqIdx_value(q4_io_issue_bits_sqIdx_value),
+    .io_issue_bits_sqIdx_flag(q4_io_issue_bits_sqIdx_flag),
+    .io_issue_bits_issueQueue(q4_io_issue_bits_issueQueue),
+    .io_issue_bits_prs1Busy(q4_io_issue_bits_prs1Busy),
+    .io_issue_bits_prs2Busy(q4_io_issue_bits_prs2Busy),
+    .io_issue_bits_isSta(q4_io_issue_bits_isSta),
+    .io_issue_bits_isStd(q4_io_issue_bits_isStd),
+    .io_wakeupPorts_0_valid(q4_io_wakeupPorts_0_valid),
+    .io_wakeupPorts_0_bits_pdst(q4_io_wakeupPorts_0_bits_pdst),
+    .io_wakeupPorts_1_valid(q4_io_wakeupPorts_1_valid),
+    .io_wakeupPorts_1_bits_pdst(q4_io_wakeupPorts_1_bits_pdst),
+    .io_wakeupPorts_2_valid(q4_io_wakeupPorts_2_valid),
+    .io_wakeupPorts_2_bits_pdst(q4_io_wakeupPorts_2_bits_pdst),
+    .io_wakeupPorts_3_valid(q4_io_wakeupPorts_3_valid),
+    .io_wakeupPorts_3_bits_pdst(q4_io_wakeupPorts_3_bits_pdst),
+    .io_wakeupPorts_4_valid(q4_io_wakeupPorts_4_valid),
+    .io_wakeupPorts_4_bits_pdst(q4_io_wakeupPorts_4_bits_pdst),
+    .io_redirectInfo_valid(q4_io_redirectInfo_valid),
+    .io_redirectInfo_bits_doRedirect(q4_io_redirectInfo_bits_doRedirect),
+    .io_redirectInfo_bits_robIdx_value(q4_io_redirectInfo_bits_robIdx_value),
+    .io_redirectInfo_bits_robIdx_flag(q4_io_redirectInfo_bits_robIdx_flag),
+    .io_freeEntries(q4_io_freeEntries)
+  );
+  IssueQueue_4 q5 ( // @[src/main/scala/backend/scheduler/Scheduler.scala 56:18]
+    .clock(q5_clock),
+    .reset(q5_reset),
+    .io_enq_valid(q5_io_enq_valid),
+    .io_enq_bits_pc(q5_io_enq_bits_pc),
+    .io_enq_bits_inst(q5_io_enq_bits_inst),
+    .io_enq_bits_ctrl_fuType(q5_io_enq_bits_ctrl_fuType),
+    .io_enq_bits_ctrl_aluOp(q5_io_enq_bits_ctrl_aluOp),
+    .io_enq_bits_ctrl_bruOp(q5_io_enq_bits_ctrl_bruOp),
+    .io_enq_bits_ctrl_lsuOp(q5_io_enq_bits_ctrl_lsuOp),
+    .io_enq_bits_ctrl_csrOp(q5_io_enq_bits_ctrl_csrOp),
+    .io_enq_bits_ctrl_mulOp(q5_io_enq_bits_ctrl_mulOp),
+    .io_enq_bits_ctrl_divOp(q5_io_enq_bits_ctrl_divOp),
+    .io_enq_bits_ctrl_src1Type(q5_io_enq_bits_ctrl_src1Type),
+    .io_enq_bits_ctrl_src2Type(q5_io_enq_bits_ctrl_src2Type),
+    .io_enq_bits_ctrl_immType(q5_io_enq_bits_ctrl_immType),
+    .io_enq_bits_ctrl_rfWen(q5_io_enq_bits_ctrl_rfWen),
+    .io_enq_bits_ctrl_memRead(q5_io_enq_bits_ctrl_memRead),
+    .io_enq_bits_ctrl_memWrite(q5_io_enq_bits_ctrl_memWrite),
+    .io_enq_bits_ctrl_csrWen(q5_io_enq_bits_ctrl_csrWen),
+    .io_enq_bits_ctrl_isBranch(q5_io_enq_bits_ctrl_isBranch),
+    .io_enq_bits_ctrl_isJump(q5_io_enq_bits_ctrl_isJump),
+    .io_enq_bits_ctrl_isPriv(q5_io_enq_bits_ctrl_isPriv),
+    .io_enq_bits_excp_excpVec(q5_io_enq_bits_excp_excpVec),
+    .io_enq_bits_imm(q5_io_enq_bits_imm),
+    .io_enq_bits_csrAddress(q5_io_enq_bits_csrAddress),
+    .io_enq_bits_pdInfo_valid(q5_io_enq_bits_pdInfo_valid),
+    .io_enq_bits_pdInfo_isBr(q5_io_enq_bits_pdInfo_isBr),
+    .io_enq_bits_pdInfo_isJal(q5_io_enq_bits_pdInfo_isJal),
+    .io_enq_bits_pdInfo_isJalr(q5_io_enq_bits_pdInfo_isJalr),
+    .io_enq_bits_pdInfo_isCall(q5_io_enq_bits_pdInfo_isCall),
+    .io_enq_bits_pdInfo_isRet(q5_io_enq_bits_pdInfo_isRet),
+    .io_enq_bits_pdInfo_jumpTarget(q5_io_enq_bits_pdInfo_jumpTarget),
+    .io_enq_bits_bpuInfo_pc(q5_io_enq_bits_bpuInfo_pc),
+    .io_enq_bits_bpuInfo_fallThrough(q5_io_enq_bits_bpuInfo_fallThrough),
+    .io_enq_bits_bpuInfo_taken(q5_io_enq_bits_bpuInfo_taken),
+    .io_enq_bits_bpuInfo_target(q5_io_enq_bits_bpuInfo_target),
+    .io_enq_bits_bpuInfo_takenOffset(q5_io_enq_bits_bpuInfo_takenOffset),
+    .io_enq_bits_bpuInfo_meta_valid(q5_io_enq_bits_bpuInfo_meta_valid),
+    .io_enq_bits_bpuInfo_meta_btbHit(q5_io_enq_bits_bpuInfo_meta_btbHit),
+    .io_enq_bits_bpuInfo_meta_btbIsJalr(q5_io_enq_bits_bpuInfo_meta_btbIsJalr),
+    .io_enq_bits_bpuInfo_meta_btbIsJal(q5_io_enq_bits_bpuInfo_meta_btbIsJal),
+    .io_enq_bits_bpuInfo_meta_btbIsCall(q5_io_enq_bits_bpuInfo_meta_btbIsCall),
+    .io_enq_bits_bpuInfo_meta_btbIsRet(q5_io_enq_bits_bpuInfo_meta_btbIsRet),
+    .io_enq_bits_bpuInfo_meta_btbOffset(q5_io_enq_bits_bpuInfo_meta_btbOffset),
+    .io_enq_bits_bpuInfo_meta_phtCounter(q5_io_enq_bits_bpuInfo_meta_phtCounter),
+    .io_enq_bits_bpuInfo_meta_rasTop(q5_io_enq_bits_bpuInfo_meta_rasTop),
+    .io_enq_bits_bpuInfo_meta_predTaken(q5_io_enq_bits_bpuInfo_meta_predTaken),
+    .io_enq_bits_bpuInfo_meta_predTarget(q5_io_enq_bits_bpuInfo_meta_predTarget),
+    .io_enq_bits_ldst(q5_io_enq_bits_ldst),
+    .io_enq_bits_lrs1(q5_io_enq_bits_lrs1),
+    .io_enq_bits_lrs2(q5_io_enq_bits_lrs2),
+    .io_enq_bits_pdst(q5_io_enq_bits_pdst),
+    .io_enq_bits_prs1(q5_io_enq_bits_prs1),
+    .io_enq_bits_prs2(q5_io_enq_bits_prs2),
+    .io_enq_bits_oldPdst(q5_io_enq_bits_oldPdst),
+    .io_enq_bits_rs1Valid(q5_io_enq_bits_rs1Valid),
+    .io_enq_bits_rs2Valid(q5_io_enq_bits_rs2Valid),
+    .io_enq_bits_rdValid(q5_io_enq_bits_rdValid),
+    .io_enq_bits_snptId_valid(q5_io_enq_bits_snptId_valid),
+    .io_enq_bits_snptId_bits(q5_io_enq_bits_snptId_bits),
+    .io_enq_bits_robIdx_value(q5_io_enq_bits_robIdx_value),
+    .io_enq_bits_robIdx_flag(q5_io_enq_bits_robIdx_flag),
+    .io_enq_bits_robIdxFull_value(q5_io_enq_bits_robIdxFull_value),
+    .io_enq_bits_robIdxFull_flag(q5_io_enq_bits_robIdxFull_flag),
+    .io_enq_bits_lqIdx_value(q5_io_enq_bits_lqIdx_value),
+    .io_enq_bits_lqIdx_flag(q5_io_enq_bits_lqIdx_flag),
+    .io_enq_bits_sqIdx_value(q5_io_enq_bits_sqIdx_value),
+    .io_enq_bits_sqIdx_flag(q5_io_enq_bits_sqIdx_flag),
+    .io_enq_bits_issueQueue(q5_io_enq_bits_issueQueue),
+    .io_enq_bits_prs1Busy(q5_io_enq_bits_prs1Busy),
+    .io_enq_bits_prs2Busy(q5_io_enq_bits_prs2Busy),
+    .io_enq_bits_isSta(q5_io_enq_bits_isSta),
+    .io_enq_bits_isStd(q5_io_enq_bits_isStd),
+    .io_issue_ready(q5_io_issue_ready),
+    .io_issue_valid(q5_io_issue_valid),
+    .io_issue_bits_pc(q5_io_issue_bits_pc),
+    .io_issue_bits_inst(q5_io_issue_bits_inst),
+    .io_issue_bits_ctrl_fuType(q5_io_issue_bits_ctrl_fuType),
+    .io_issue_bits_ctrl_aluOp(q5_io_issue_bits_ctrl_aluOp),
+    .io_issue_bits_ctrl_bruOp(q5_io_issue_bits_ctrl_bruOp),
+    .io_issue_bits_ctrl_lsuOp(q5_io_issue_bits_ctrl_lsuOp),
+    .io_issue_bits_ctrl_csrOp(q5_io_issue_bits_ctrl_csrOp),
+    .io_issue_bits_ctrl_mulOp(q5_io_issue_bits_ctrl_mulOp),
+    .io_issue_bits_ctrl_divOp(q5_io_issue_bits_ctrl_divOp),
+    .io_issue_bits_ctrl_src1Type(q5_io_issue_bits_ctrl_src1Type),
+    .io_issue_bits_ctrl_src2Type(q5_io_issue_bits_ctrl_src2Type),
+    .io_issue_bits_ctrl_immType(q5_io_issue_bits_ctrl_immType),
+    .io_issue_bits_ctrl_rfWen(q5_io_issue_bits_ctrl_rfWen),
+    .io_issue_bits_ctrl_memRead(q5_io_issue_bits_ctrl_memRead),
+    .io_issue_bits_ctrl_memWrite(q5_io_issue_bits_ctrl_memWrite),
+    .io_issue_bits_ctrl_csrWen(q5_io_issue_bits_ctrl_csrWen),
+    .io_issue_bits_ctrl_isBranch(q5_io_issue_bits_ctrl_isBranch),
+    .io_issue_bits_ctrl_isJump(q5_io_issue_bits_ctrl_isJump),
+    .io_issue_bits_ctrl_isPriv(q5_io_issue_bits_ctrl_isPriv),
+    .io_issue_bits_excp_excpVec(q5_io_issue_bits_excp_excpVec),
+    .io_issue_bits_imm(q5_io_issue_bits_imm),
+    .io_issue_bits_csrAddress(q5_io_issue_bits_csrAddress),
+    .io_issue_bits_pdInfo_valid(q5_io_issue_bits_pdInfo_valid),
+    .io_issue_bits_pdInfo_isBr(q5_io_issue_bits_pdInfo_isBr),
+    .io_issue_bits_pdInfo_isJal(q5_io_issue_bits_pdInfo_isJal),
+    .io_issue_bits_pdInfo_isJalr(q5_io_issue_bits_pdInfo_isJalr),
+    .io_issue_bits_pdInfo_isCall(q5_io_issue_bits_pdInfo_isCall),
+    .io_issue_bits_pdInfo_isRet(q5_io_issue_bits_pdInfo_isRet),
+    .io_issue_bits_pdInfo_jumpTarget(q5_io_issue_bits_pdInfo_jumpTarget),
+    .io_issue_bits_bpuInfo_pc(q5_io_issue_bits_bpuInfo_pc),
+    .io_issue_bits_bpuInfo_fallThrough(q5_io_issue_bits_bpuInfo_fallThrough),
+    .io_issue_bits_bpuInfo_taken(q5_io_issue_bits_bpuInfo_taken),
+    .io_issue_bits_bpuInfo_target(q5_io_issue_bits_bpuInfo_target),
+    .io_issue_bits_bpuInfo_takenOffset(q5_io_issue_bits_bpuInfo_takenOffset),
+    .io_issue_bits_bpuInfo_meta_valid(q5_io_issue_bits_bpuInfo_meta_valid),
+    .io_issue_bits_bpuInfo_meta_btbHit(q5_io_issue_bits_bpuInfo_meta_btbHit),
+    .io_issue_bits_bpuInfo_meta_btbIsJalr(q5_io_issue_bits_bpuInfo_meta_btbIsJalr),
+    .io_issue_bits_bpuInfo_meta_btbIsJal(q5_io_issue_bits_bpuInfo_meta_btbIsJal),
+    .io_issue_bits_bpuInfo_meta_btbIsCall(q5_io_issue_bits_bpuInfo_meta_btbIsCall),
+    .io_issue_bits_bpuInfo_meta_btbIsRet(q5_io_issue_bits_bpuInfo_meta_btbIsRet),
+    .io_issue_bits_bpuInfo_meta_btbOffset(q5_io_issue_bits_bpuInfo_meta_btbOffset),
+    .io_issue_bits_bpuInfo_meta_phtCounter(q5_io_issue_bits_bpuInfo_meta_phtCounter),
+    .io_issue_bits_bpuInfo_meta_rasTop(q5_io_issue_bits_bpuInfo_meta_rasTop),
+    .io_issue_bits_bpuInfo_meta_predTaken(q5_io_issue_bits_bpuInfo_meta_predTaken),
+    .io_issue_bits_bpuInfo_meta_predTarget(q5_io_issue_bits_bpuInfo_meta_predTarget),
+    .io_issue_bits_ldst(q5_io_issue_bits_ldst),
+    .io_issue_bits_lrs1(q5_io_issue_bits_lrs1),
+    .io_issue_bits_lrs2(q5_io_issue_bits_lrs2),
+    .io_issue_bits_pdst(q5_io_issue_bits_pdst),
+    .io_issue_bits_prs1(q5_io_issue_bits_prs1),
+    .io_issue_bits_prs2(q5_io_issue_bits_prs2),
+    .io_issue_bits_oldPdst(q5_io_issue_bits_oldPdst),
+    .io_issue_bits_rs1Valid(q5_io_issue_bits_rs1Valid),
+    .io_issue_bits_rs2Valid(q5_io_issue_bits_rs2Valid),
+    .io_issue_bits_rdValid(q5_io_issue_bits_rdValid),
+    .io_issue_bits_snptId_valid(q5_io_issue_bits_snptId_valid),
+    .io_issue_bits_snptId_bits(q5_io_issue_bits_snptId_bits),
+    .io_issue_bits_robIdx_value(q5_io_issue_bits_robIdx_value),
+    .io_issue_bits_robIdx_flag(q5_io_issue_bits_robIdx_flag),
+    .io_issue_bits_robIdxFull_value(q5_io_issue_bits_robIdxFull_value),
+    .io_issue_bits_robIdxFull_flag(q5_io_issue_bits_robIdxFull_flag),
+    .io_issue_bits_lqIdx_value(q5_io_issue_bits_lqIdx_value),
+    .io_issue_bits_lqIdx_flag(q5_io_issue_bits_lqIdx_flag),
+    .io_issue_bits_sqIdx_value(q5_io_issue_bits_sqIdx_value),
+    .io_issue_bits_sqIdx_flag(q5_io_issue_bits_sqIdx_flag),
+    .io_issue_bits_issueQueue(q5_io_issue_bits_issueQueue),
+    .io_issue_bits_prs1Busy(q5_io_issue_bits_prs1Busy),
+    .io_issue_bits_prs2Busy(q5_io_issue_bits_prs2Busy),
+    .io_issue_bits_isSta(q5_io_issue_bits_isSta),
+    .io_issue_bits_isStd(q5_io_issue_bits_isStd),
+    .io_wakeupPorts_0_valid(q5_io_wakeupPorts_0_valid),
+    .io_wakeupPorts_0_bits_pdst(q5_io_wakeupPorts_0_bits_pdst),
+    .io_wakeupPorts_1_valid(q5_io_wakeupPorts_1_valid),
+    .io_wakeupPorts_1_bits_pdst(q5_io_wakeupPorts_1_bits_pdst),
+    .io_wakeupPorts_2_valid(q5_io_wakeupPorts_2_valid),
+    .io_wakeupPorts_2_bits_pdst(q5_io_wakeupPorts_2_bits_pdst),
+    .io_wakeupPorts_3_valid(q5_io_wakeupPorts_3_valid),
+    .io_wakeupPorts_3_bits_pdst(q5_io_wakeupPorts_3_bits_pdst),
+    .io_wakeupPorts_4_valid(q5_io_wakeupPorts_4_valid),
+    .io_wakeupPorts_4_bits_pdst(q5_io_wakeupPorts_4_bits_pdst),
+    .io_redirectInfo_valid(q5_io_redirectInfo_valid),
+    .io_redirectInfo_bits_doRedirect(q5_io_redirectInfo_bits_doRedirect),
+    .io_redirectInfo_bits_robIdx_value(q5_io_redirectInfo_bits_robIdx_value),
+    .io_redirectInfo_bits_robIdx_flag(q5_io_redirectInfo_bits_robIdx_flag),
+    .io_freeEntries(q5_io_freeEntries)
+  );
+  assign io_q1Issue_valid = q1_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pc = q1_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_inst = q1_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_fuType = q1_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_aluOp = q1_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_bruOp = q1_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_lsuOp = q1_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_csrOp = q1_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_mulOp = q1_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_divOp = q1_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_src1Type = q1_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_src2Type = q1_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_immType = q1_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_rfWen = q1_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_memRead = q1_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_memWrite = q1_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_csrWen = q1_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_isBranch = q1_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_isJump = q1_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ctrl_isPriv = q1_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_excp_excpVec = q1_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_imm = q1_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_csrAddress = q1_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_valid = q1_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_isBr = q1_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_isJal = q1_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_isJalr = q1_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_isCall = q1_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_isRet = q1_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdInfo_jumpTarget = q1_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_pc = q1_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_fallThrough = q1_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_taken = q1_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_target = q1_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_takenOffset = q1_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_valid = q1_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbHit = q1_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbIsJalr = q1_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbIsJal = q1_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbIsCall = q1_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbIsRet = q1_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_btbOffset = q1_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_phtCounter = q1_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_rasTop = q1_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_predTaken = q1_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_bpuInfo_meta_predTarget = q1_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_ldst = q1_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_lrs1 = q1_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_lrs2 = q1_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_pdst = q1_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_prs1 = q1_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_prs2 = q1_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_oldPdst = q1_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_rs1Valid = q1_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_rs2Valid = q1_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_rdValid = q1_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_snptId_valid = q1_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_snptId_bits = q1_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_robIdx_value = q1_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_robIdx_flag = q1_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_robIdxFull_value = q1_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_robIdxFull_flag = q1_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_lqIdx_value = q1_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_lqIdx_flag = q1_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_sqIdx_value = q1_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_sqIdx_flag = q1_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_issueQueue = q1_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_prs1Busy = q1_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_prs2Busy = q1_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_isSta = q1_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q1Issue_bits_isStd = q1_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign io_q2Issue_valid = q2_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pc = q2_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_inst = q2_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_fuType = q2_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_aluOp = q2_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_bruOp = q2_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_lsuOp = q2_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_csrOp = q2_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_mulOp = q2_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_divOp = q2_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_src1Type = q2_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_src2Type = q2_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_immType = q2_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_rfWen = q2_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_memRead = q2_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_memWrite = q2_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_csrWen = q2_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_isBranch = q2_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_isJump = q2_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ctrl_isPriv = q2_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_excp_excpVec = q2_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_imm = q2_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_csrAddress = q2_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_valid = q2_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_isBr = q2_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_isJal = q2_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_isJalr = q2_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_isCall = q2_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_isRet = q2_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdInfo_jumpTarget = q2_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_pc = q2_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_fallThrough = q2_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_taken = q2_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_target = q2_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_takenOffset = q2_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_valid = q2_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbHit = q2_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbIsJalr = q2_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbIsJal = q2_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbIsCall = q2_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbIsRet = q2_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_btbOffset = q2_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_phtCounter = q2_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_rasTop = q2_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_predTaken = q2_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_bpuInfo_meta_predTarget = q2_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_ldst = q2_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_lrs1 = q2_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_lrs2 = q2_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_pdst = q2_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_prs1 = q2_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_prs2 = q2_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_oldPdst = q2_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_rs1Valid = q2_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_rs2Valid = q2_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_rdValid = q2_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_snptId_valid = q2_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_snptId_bits = q2_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_robIdx_value = q2_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_robIdx_flag = q2_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_robIdxFull_value = q2_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_robIdxFull_flag = q2_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_issueQueue = q2_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_prs1Busy = q2_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q2Issue_bits_prs2Busy = q2_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign io_q3Issue_valid = q3_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pc = q3_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_inst = q3_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_fuType = q3_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_aluOp = q3_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_bruOp = q3_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_lsuOp = q3_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_csrOp = q3_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_mulOp = q3_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_divOp = q3_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_src1Type = q3_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_src2Type = q3_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_immType = q3_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_rfWen = q3_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_memRead = q3_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_memWrite = q3_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_csrWen = q3_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_isBranch = q3_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_isJump = q3_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ctrl_isPriv = q3_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_excp_excpVec = q3_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_imm = q3_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_csrAddress = q3_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_valid = q3_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_isBr = q3_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_isJal = q3_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_isJalr = q3_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_isCall = q3_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_isRet = q3_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdInfo_jumpTarget = q3_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_pc = q3_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_fallThrough = q3_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_taken = q3_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_target = q3_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_takenOffset = q3_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_valid = q3_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbHit = q3_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbIsJalr = q3_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbIsJal = q3_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbIsCall = q3_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbIsRet = q3_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_btbOffset = q3_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_phtCounter = q3_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_rasTop = q3_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_predTaken = q3_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_bpuInfo_meta_predTarget = q3_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_ldst = q3_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_lrs1 = q3_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_lrs2 = q3_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_pdst = q3_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_prs1 = q3_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_prs2 = q3_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_oldPdst = q3_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_rs1Valid = q3_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_rs2Valid = q3_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_rdValid = q3_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_snptId_valid = q3_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_snptId_bits = q3_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_robIdx_value = q3_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_robIdx_flag = q3_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_robIdxFull_value = q3_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_robIdxFull_flag = q3_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_lqIdx_value = q3_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_lqIdx_flag = q3_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_sqIdx_value = q3_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_sqIdx_flag = q3_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_issueQueue = q3_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_prs1Busy = q3_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_prs2Busy = q3_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_isSta = q3_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q3Issue_bits_isStd = q3_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign io_q4Issue_valid = q4_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pc = q4_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_inst = q4_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_fuType = q4_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_aluOp = q4_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_bruOp = q4_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_lsuOp = q4_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_csrOp = q4_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_mulOp = q4_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_divOp = q4_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_src1Type = q4_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_src2Type = q4_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_immType = q4_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_rfWen = q4_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_memRead = q4_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_memWrite = q4_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_csrWen = q4_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_isBranch = q4_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_isJump = q4_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ctrl_isPriv = q4_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_excp_excpVec = q4_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_imm = q4_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_csrAddress = q4_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_valid = q4_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_isBr = q4_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_isJal = q4_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_isJalr = q4_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_isCall = q4_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_isRet = q4_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdInfo_jumpTarget = q4_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_pc = q4_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_fallThrough = q4_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_taken = q4_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_target = q4_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_takenOffset = q4_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_valid = q4_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbHit = q4_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbIsJalr = q4_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbIsJal = q4_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbIsCall = q4_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbIsRet = q4_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_btbOffset = q4_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_phtCounter = q4_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_rasTop = q4_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_predTaken = q4_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_bpuInfo_meta_predTarget = q4_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_ldst = q4_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_lrs1 = q4_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_lrs2 = q4_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_pdst = q4_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_prs1 = q4_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_prs2 = q4_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_oldPdst = q4_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_rs1Valid = q4_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_rs2Valid = q4_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_rdValid = q4_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_snptId_valid = q4_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_snptId_bits = q4_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_robIdx_value = q4_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_robIdx_flag = q4_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_robIdxFull_value = q4_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_robIdxFull_flag = q4_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_lqIdx_value = q4_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_lqIdx_flag = q4_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_sqIdx_value = q4_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_sqIdx_flag = q4_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_issueQueue = q4_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_prs1Busy = q4_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_prs2Busy = q4_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_isSta = q4_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q4Issue_bits_isStd = q4_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign io_q5Issue_valid = q5_io_issue_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pc = q5_io_issue_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_inst = q5_io_issue_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_fuType = q5_io_issue_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_aluOp = q5_io_issue_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_bruOp = q5_io_issue_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_lsuOp = q5_io_issue_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_csrOp = q5_io_issue_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_mulOp = q5_io_issue_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_divOp = q5_io_issue_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_src1Type = q5_io_issue_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_src2Type = q5_io_issue_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_immType = q5_io_issue_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_rfWen = q5_io_issue_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_memRead = q5_io_issue_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_memWrite = q5_io_issue_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_csrWen = q5_io_issue_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_isBranch = q5_io_issue_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_isJump = q5_io_issue_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ctrl_isPriv = q5_io_issue_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_excp_excpVec = q5_io_issue_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_imm = q5_io_issue_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_csrAddress = q5_io_issue_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_valid = q5_io_issue_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_isBr = q5_io_issue_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_isJal = q5_io_issue_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_isJalr = q5_io_issue_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_isCall = q5_io_issue_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_isRet = q5_io_issue_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdInfo_jumpTarget = q5_io_issue_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_pc = q5_io_issue_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_fallThrough = q5_io_issue_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_taken = q5_io_issue_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_target = q5_io_issue_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_takenOffset = q5_io_issue_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_valid = q5_io_issue_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbHit = q5_io_issue_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbIsJalr = q5_io_issue_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbIsJal = q5_io_issue_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbIsCall = q5_io_issue_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbIsRet = q5_io_issue_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_btbOffset = q5_io_issue_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_phtCounter = q5_io_issue_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_rasTop = q5_io_issue_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_predTaken = q5_io_issue_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_bpuInfo_meta_predTarget = q5_io_issue_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_ldst = q5_io_issue_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_lrs1 = q5_io_issue_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_lrs2 = q5_io_issue_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_pdst = q5_io_issue_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_prs1 = q5_io_issue_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_prs2 = q5_io_issue_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_oldPdst = q5_io_issue_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_rs1Valid = q5_io_issue_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_rs2Valid = q5_io_issue_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_rdValid = q5_io_issue_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_snptId_valid = q5_io_issue_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_snptId_bits = q5_io_issue_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_robIdx_value = q5_io_issue_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_robIdx_flag = q5_io_issue_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_robIdxFull_value = q5_io_issue_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_robIdxFull_flag = q5_io_issue_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_lqIdx_value = q5_io_issue_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_lqIdx_flag = q5_io_issue_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_sqIdx_value = q5_io_issue_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_sqIdx_flag = q5_io_issue_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_issueQueue = q5_io_issue_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_prs1Busy = q5_io_issue_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_prs2Busy = q5_io_issue_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_isSta = q5_io_issue_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_q5Issue_bits_isStd = q5_io_issue_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign io_feedback_q1FreeEntries = q1_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 97:29]
+  assign io_feedback_q2FreeEntries = q2_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 98:29]
+  assign io_feedback_q3FreeEntries = q3_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 99:29]
+  assign io_feedback_q4FreeEntries = q4_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 100:29]
+  assign io_feedback_q5FreeEntries = q5_io_freeEntries; // @[src/main/scala/backend/scheduler/Scheduler.scala 101:29]
+  assign q1_clock = clock;
+  assign q1_reset = reset;
+  assign q1_io_enq_valid = io_q1IQEnq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pc = io_q1IQEnq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_inst = io_q1IQEnq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_fuType = io_q1IQEnq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_aluOp = io_q1IQEnq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_bruOp = io_q1IQEnq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_lsuOp = io_q1IQEnq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_csrOp = io_q1IQEnq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_mulOp = io_q1IQEnq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_divOp = io_q1IQEnq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_src1Type = io_q1IQEnq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_src2Type = io_q1IQEnq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_immType = io_q1IQEnq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_rfWen = io_q1IQEnq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_memRead = io_q1IQEnq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_memWrite = io_q1IQEnq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_csrWen = io_q1IQEnq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_isBranch = io_q1IQEnq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_isJump = io_q1IQEnq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ctrl_isPriv = io_q1IQEnq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_excp_excpVec = io_q1IQEnq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_imm = io_q1IQEnq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_csrAddress = io_q1IQEnq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_valid = io_q1IQEnq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_isBr = io_q1IQEnq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_isJal = io_q1IQEnq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_isJalr = io_q1IQEnq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_isCall = io_q1IQEnq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_isRet = io_q1IQEnq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdInfo_jumpTarget = io_q1IQEnq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_pc = io_q1IQEnq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_fallThrough = io_q1IQEnq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_taken = io_q1IQEnq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_target = io_q1IQEnq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_takenOffset = io_q1IQEnq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_valid = io_q1IQEnq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbHit = io_q1IQEnq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbIsJalr = io_q1IQEnq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbIsJal = io_q1IQEnq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbIsCall = io_q1IQEnq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbIsRet = io_q1IQEnq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_btbOffset = io_q1IQEnq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_phtCounter = io_q1IQEnq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_rasTop = io_q1IQEnq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_predTaken = io_q1IQEnq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_bpuInfo_meta_predTarget = io_q1IQEnq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_ldst = io_q1IQEnq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_lrs1 = io_q1IQEnq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_lrs2 = io_q1IQEnq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_pdst = io_q1IQEnq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_prs1 = io_q1IQEnq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_prs2 = io_q1IQEnq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_oldPdst = io_q1IQEnq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_rs1Valid = io_q1IQEnq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_rs2Valid = io_q1IQEnq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_rdValid = io_q1IQEnq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_snptId_valid = io_q1IQEnq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_snptId_bits = io_q1IQEnq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_robIdx_value = io_q1IQEnq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_robIdx_flag = io_q1IQEnq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_robIdxFull_value = io_q1IQEnq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_robIdxFull_flag = io_q1IQEnq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_lqIdx_value = 4'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_lqIdx_flag = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_sqIdx_value = 4'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_sqIdx_flag = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_issueQueue = 3'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_prs1Busy = io_q1IQEnq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_prs2Busy = io_q1IQEnq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_isSta = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_enq_bits_isStd = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 63:13]
+  assign q1_io_issue_ready = io_q1Issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 72:14]
+  assign q1_io_wakeupPorts_0_valid = io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_0_bits_pdst = io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_1_valid = io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_1_bits_pdst = io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_2_valid = io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_2_bits_pdst = io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_3_valid = io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_3_bits_pdst = io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_4_valid = io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_wakeupPorts_4_bits_pdst = io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q1_io_redirectInfo_valid = io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q1_io_redirectInfo_bits_doRedirect = io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q1_io_redirectInfo_bits_robIdx_value = io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q1_io_redirectInfo_bits_robIdx_flag = io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q2_clock = clock;
+  assign q2_reset = reset;
+  assign q2_io_enq_valid = io_q2IQEnq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pc = io_q2IQEnq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_inst = io_q2IQEnq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_fuType = io_q2IQEnq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_aluOp = io_q2IQEnq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_bruOp = io_q2IQEnq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_lsuOp = io_q2IQEnq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_csrOp = io_q2IQEnq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_mulOp = io_q2IQEnq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_divOp = io_q2IQEnq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_src1Type = io_q2IQEnq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_src2Type = io_q2IQEnq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_immType = io_q2IQEnq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_rfWen = io_q2IQEnq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_memRead = io_q2IQEnq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_memWrite = io_q2IQEnq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_csrWen = io_q2IQEnq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_isBranch = io_q2IQEnq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_isJump = io_q2IQEnq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ctrl_isPriv = io_q2IQEnq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_excp_excpVec = io_q2IQEnq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_imm = io_q2IQEnq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_csrAddress = io_q2IQEnq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_valid = io_q2IQEnq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_isBr = io_q2IQEnq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_isJal = io_q2IQEnq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_isJalr = io_q2IQEnq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_isCall = io_q2IQEnq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_isRet = io_q2IQEnq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdInfo_jumpTarget = io_q2IQEnq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_pc = io_q2IQEnq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_fallThrough = io_q2IQEnq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_taken = io_q2IQEnq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_target = io_q2IQEnq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_takenOffset = io_q2IQEnq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_valid = io_q2IQEnq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbHit = io_q2IQEnq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbIsJalr = io_q2IQEnq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbIsJal = io_q2IQEnq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbIsCall = io_q2IQEnq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbIsRet = io_q2IQEnq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_btbOffset = io_q2IQEnq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_phtCounter = io_q2IQEnq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_rasTop = io_q2IQEnq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_predTaken = io_q2IQEnq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_bpuInfo_meta_predTarget = io_q2IQEnq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_ldst = io_q2IQEnq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_lrs1 = io_q2IQEnq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_lrs2 = io_q2IQEnq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_pdst = io_q2IQEnq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_prs1 = io_q2IQEnq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_prs2 = io_q2IQEnq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_oldPdst = io_q2IQEnq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_rs1Valid = io_q2IQEnq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_rs2Valid = io_q2IQEnq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_rdValid = io_q2IQEnq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_snptId_valid = io_q2IQEnq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_snptId_bits = io_q2IQEnq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_robIdx_value = io_q2IQEnq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_robIdx_flag = io_q2IQEnq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_robIdxFull_value = io_q2IQEnq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_robIdxFull_flag = io_q2IQEnq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_issueQueue = io_q2IQEnq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_prs1Busy = io_q2IQEnq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_enq_bits_prs2Busy = io_q2IQEnq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 64:13]
+  assign q2_io_issue_ready = io_q2Issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 73:14]
+  assign q2_io_wakeupPorts_0_valid = io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_0_bits_pdst = io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_1_valid = io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_1_bits_pdst = io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_2_valid = io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_2_bits_pdst = io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_3_valid = io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_3_bits_pdst = io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_4_valid = io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_wakeupPorts_4_bits_pdst = io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q2_io_redirectInfo_valid = io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q2_io_redirectInfo_bits_doRedirect = io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q2_io_redirectInfo_bits_robIdx_value = io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q2_io_redirectInfo_bits_robIdx_flag = io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q3_clock = clock;
+  assign q3_reset = reset;
+  assign q3_io_enq_valid = io_q3IQEnq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pc = io_q3IQEnq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_inst = io_q3IQEnq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_fuType = io_q3IQEnq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_aluOp = io_q3IQEnq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_bruOp = io_q3IQEnq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_lsuOp = io_q3IQEnq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_csrOp = io_q3IQEnq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_mulOp = io_q3IQEnq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_divOp = io_q3IQEnq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_src1Type = io_q3IQEnq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_src2Type = io_q3IQEnq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_immType = io_q3IQEnq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_rfWen = io_q3IQEnq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_memRead = io_q3IQEnq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_memWrite = io_q3IQEnq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_csrWen = io_q3IQEnq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_isBranch = io_q3IQEnq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_isJump = io_q3IQEnq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ctrl_isPriv = io_q3IQEnq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_excp_excpVec = io_q3IQEnq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_imm = io_q3IQEnq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_csrAddress = io_q3IQEnq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_valid = io_q3IQEnq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_isBr = io_q3IQEnq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_isJal = io_q3IQEnq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_isJalr = io_q3IQEnq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_isCall = io_q3IQEnq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_isRet = io_q3IQEnq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdInfo_jumpTarget = io_q3IQEnq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_pc = io_q3IQEnq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_fallThrough = io_q3IQEnq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_taken = io_q3IQEnq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_target = io_q3IQEnq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_takenOffset = io_q3IQEnq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_valid = io_q3IQEnq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbHit = io_q3IQEnq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbIsJalr = io_q3IQEnq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbIsJal = io_q3IQEnq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbIsCall = io_q3IQEnq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbIsRet = io_q3IQEnq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_btbOffset = io_q3IQEnq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_phtCounter = io_q3IQEnq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_rasTop = io_q3IQEnq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_predTaken = io_q3IQEnq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_bpuInfo_meta_predTarget = io_q3IQEnq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_ldst = io_q3IQEnq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_lrs1 = io_q3IQEnq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_lrs2 = io_q3IQEnq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_pdst = io_q3IQEnq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_prs1 = io_q3IQEnq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_prs2 = io_q3IQEnq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_oldPdst = io_q3IQEnq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_rs1Valid = io_q3IQEnq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_rs2Valid = io_q3IQEnq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_rdValid = io_q3IQEnq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_snptId_valid = io_q3IQEnq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_snptId_bits = io_q3IQEnq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_robIdx_value = io_q3IQEnq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_robIdx_flag = io_q3IQEnq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_robIdxFull_value = io_q3IQEnq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_robIdxFull_flag = io_q3IQEnq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_lqIdx_value = 4'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_lqIdx_flag = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_sqIdx_value = 4'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_sqIdx_flag = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_issueQueue = io_q3IQEnq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_prs1Busy = io_q3IQEnq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_prs2Busy = io_q3IQEnq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_isSta = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_enq_bits_isStd = 1'h0; // @[src/main/scala/backend/scheduler/Scheduler.scala 65:13]
+  assign q3_io_issue_ready = io_q3Issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 74:14]
+  assign q3_io_wakeupPorts_0_valid = io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_0_bits_pdst = io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_1_valid = io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_1_bits_pdst = io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_2_valid = io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_2_bits_pdst = io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_3_valid = io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_3_bits_pdst = io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_4_valid = io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_wakeupPorts_4_bits_pdst = io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q3_io_redirectInfo_valid = io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q3_io_redirectInfo_bits_doRedirect = io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q3_io_redirectInfo_bits_robIdx_value = io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q3_io_redirectInfo_bits_robIdx_flag = io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q4_clock = clock;
+  assign q4_reset = reset;
+  assign q4_io_enq_valid = io_q4IQEnq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pc = io_q4IQEnq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_inst = io_q4IQEnq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_fuType = io_q4IQEnq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_aluOp = io_q4IQEnq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_bruOp = io_q4IQEnq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_lsuOp = io_q4IQEnq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_csrOp = io_q4IQEnq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_mulOp = io_q4IQEnq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_divOp = io_q4IQEnq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_src1Type = io_q4IQEnq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_src2Type = io_q4IQEnq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_immType = io_q4IQEnq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_rfWen = io_q4IQEnq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_memRead = io_q4IQEnq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_memWrite = io_q4IQEnq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_csrWen = io_q4IQEnq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_isBranch = io_q4IQEnq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_isJump = io_q4IQEnq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ctrl_isPriv = io_q4IQEnq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_excp_excpVec = io_q4IQEnq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_imm = io_q4IQEnq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_csrAddress = io_q4IQEnq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_valid = io_q4IQEnq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_isBr = io_q4IQEnq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_isJal = io_q4IQEnq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_isJalr = io_q4IQEnq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_isCall = io_q4IQEnq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_isRet = io_q4IQEnq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdInfo_jumpTarget = io_q4IQEnq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_pc = io_q4IQEnq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_fallThrough = io_q4IQEnq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_taken = io_q4IQEnq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_target = io_q4IQEnq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_takenOffset = io_q4IQEnq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_valid = io_q4IQEnq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbHit = io_q4IQEnq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbIsJalr = io_q4IQEnq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbIsJal = io_q4IQEnq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbIsCall = io_q4IQEnq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbIsRet = io_q4IQEnq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_btbOffset = io_q4IQEnq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_phtCounter = io_q4IQEnq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_rasTop = io_q4IQEnq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_predTaken = io_q4IQEnq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_bpuInfo_meta_predTarget = io_q4IQEnq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_ldst = io_q4IQEnq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_lrs1 = io_q4IQEnq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_lrs2 = io_q4IQEnq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_pdst = io_q4IQEnq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_prs1 = io_q4IQEnq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_prs2 = io_q4IQEnq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_oldPdst = io_q4IQEnq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_rs1Valid = io_q4IQEnq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_rs2Valid = io_q4IQEnq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_rdValid = io_q4IQEnq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_snptId_valid = io_q4IQEnq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_snptId_bits = io_q4IQEnq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_robIdx_value = io_q4IQEnq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_robIdx_flag = io_q4IQEnq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_robIdxFull_value = io_q4IQEnq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_robIdxFull_flag = io_q4IQEnq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_lqIdx_value = io_q4IQEnq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_lqIdx_flag = io_q4IQEnq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_sqIdx_value = io_q4IQEnq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_sqIdx_flag = io_q4IQEnq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_issueQueue = io_q4IQEnq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_prs1Busy = io_q4IQEnq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_prs2Busy = io_q4IQEnq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_isSta = io_q4IQEnq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_enq_bits_isStd = io_q4IQEnq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 66:13]
+  assign q4_io_issue_ready = io_q4Issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 75:14]
+  assign q4_io_wakeupPorts_0_valid = io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_0_bits_pdst = io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_1_valid = io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_1_bits_pdst = io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_2_valid = io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_2_bits_pdst = io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_3_valid = io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_3_bits_pdst = io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_4_valid = io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_wakeupPorts_4_bits_pdst = io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q4_io_redirectInfo_valid = io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q4_io_redirectInfo_bits_doRedirect = io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q4_io_redirectInfo_bits_robIdx_value = io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q4_io_redirectInfo_bits_robIdx_flag = io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q5_clock = clock;
+  assign q5_reset = reset;
+  assign q5_io_enq_valid = io_q5IQEnq_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pc = io_q5IQEnq_bits_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_inst = io_q5IQEnq_bits_inst; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_fuType = io_q5IQEnq_bits_ctrl_fuType; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_aluOp = io_q5IQEnq_bits_ctrl_aluOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_bruOp = io_q5IQEnq_bits_ctrl_bruOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_lsuOp = io_q5IQEnq_bits_ctrl_lsuOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_csrOp = io_q5IQEnq_bits_ctrl_csrOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_mulOp = io_q5IQEnq_bits_ctrl_mulOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_divOp = io_q5IQEnq_bits_ctrl_divOp; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_src1Type = io_q5IQEnq_bits_ctrl_src1Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_src2Type = io_q5IQEnq_bits_ctrl_src2Type; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_immType = io_q5IQEnq_bits_ctrl_immType; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_rfWen = io_q5IQEnq_bits_ctrl_rfWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_memRead = io_q5IQEnq_bits_ctrl_memRead; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_memWrite = io_q5IQEnq_bits_ctrl_memWrite; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_csrWen = io_q5IQEnq_bits_ctrl_csrWen; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_isBranch = io_q5IQEnq_bits_ctrl_isBranch; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_isJump = io_q5IQEnq_bits_ctrl_isJump; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ctrl_isPriv = io_q5IQEnq_bits_ctrl_isPriv; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_excp_excpVec = io_q5IQEnq_bits_excp_excpVec; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_imm = io_q5IQEnq_bits_imm; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_csrAddress = io_q5IQEnq_bits_csrAddress; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_valid = io_q5IQEnq_bits_pdInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_isBr = io_q5IQEnq_bits_pdInfo_isBr; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_isJal = io_q5IQEnq_bits_pdInfo_isJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_isJalr = io_q5IQEnq_bits_pdInfo_isJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_isCall = io_q5IQEnq_bits_pdInfo_isCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_isRet = io_q5IQEnq_bits_pdInfo_isRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdInfo_jumpTarget = io_q5IQEnq_bits_pdInfo_jumpTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_pc = io_q5IQEnq_bits_bpuInfo_pc; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_fallThrough = io_q5IQEnq_bits_bpuInfo_fallThrough; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_taken = io_q5IQEnq_bits_bpuInfo_taken; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_target = io_q5IQEnq_bits_bpuInfo_target; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_takenOffset = io_q5IQEnq_bits_bpuInfo_takenOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_valid = io_q5IQEnq_bits_bpuInfo_meta_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbHit = io_q5IQEnq_bits_bpuInfo_meta_btbHit; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbIsJalr = io_q5IQEnq_bits_bpuInfo_meta_btbIsJalr; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbIsJal = io_q5IQEnq_bits_bpuInfo_meta_btbIsJal; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbIsCall = io_q5IQEnq_bits_bpuInfo_meta_btbIsCall; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbIsRet = io_q5IQEnq_bits_bpuInfo_meta_btbIsRet; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_btbOffset = io_q5IQEnq_bits_bpuInfo_meta_btbOffset; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_phtCounter = io_q5IQEnq_bits_bpuInfo_meta_phtCounter; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_rasTop = io_q5IQEnq_bits_bpuInfo_meta_rasTop; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_predTaken = io_q5IQEnq_bits_bpuInfo_meta_predTaken; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_bpuInfo_meta_predTarget = io_q5IQEnq_bits_bpuInfo_meta_predTarget; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_ldst = io_q5IQEnq_bits_ldst; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_lrs1 = io_q5IQEnq_bits_lrs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_lrs2 = io_q5IQEnq_bits_lrs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_pdst = io_q5IQEnq_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_prs1 = io_q5IQEnq_bits_prs1; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_prs2 = io_q5IQEnq_bits_prs2; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_oldPdst = io_q5IQEnq_bits_oldPdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_rs1Valid = io_q5IQEnq_bits_rs1Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_rs2Valid = io_q5IQEnq_bits_rs2Valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_rdValid = io_q5IQEnq_bits_rdValid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_snptId_valid = io_q5IQEnq_bits_snptId_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_snptId_bits = io_q5IQEnq_bits_snptId_bits; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_robIdx_value = io_q5IQEnq_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_robIdx_flag = io_q5IQEnq_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_robIdxFull_value = io_q5IQEnq_bits_robIdxFull_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_robIdxFull_flag = io_q5IQEnq_bits_robIdxFull_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_lqIdx_value = io_q5IQEnq_bits_lqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_lqIdx_flag = io_q5IQEnq_bits_lqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_sqIdx_value = io_q5IQEnq_bits_sqIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_sqIdx_flag = io_q5IQEnq_bits_sqIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_issueQueue = io_q5IQEnq_bits_issueQueue; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_prs1Busy = io_q5IQEnq_bits_prs1Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_prs2Busy = io_q5IQEnq_bits_prs2Busy; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_isSta = io_q5IQEnq_bits_isSta; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_enq_bits_isStd = io_q5IQEnq_bits_isStd; // @[src/main/scala/backend/scheduler/Scheduler.scala 67:13]
+  assign q5_io_issue_ready = io_q5Issue_ready; // @[src/main/scala/backend/scheduler/Scheduler.scala 76:14]
+  assign q5_io_wakeupPorts_0_valid = io_wakeupPorts_0_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_0_bits_pdst = io_wakeupPorts_0_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_1_valid = io_wakeupPorts_1_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_1_bits_pdst = io_wakeupPorts_1_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_2_valid = io_wakeupPorts_2_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_2_bits_pdst = io_wakeupPorts_2_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_3_valid = io_wakeupPorts_3_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_3_bits_pdst = io_wakeupPorts_3_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_4_valid = io_wakeupPorts_4_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_wakeupPorts_4_bits_pdst = io_wakeupPorts_4_bits_pdst; // @[src/main/scala/backend/scheduler/Scheduler.scala 82:23]
+  assign q5_io_redirectInfo_valid = io_redirectInfo_valid; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q5_io_redirectInfo_bits_doRedirect = io_redirectInfo_bits_doRedirect; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q5_io_redirectInfo_bits_robIdx_value = io_redirectInfo_bits_robIdx_value; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+  assign q5_io_redirectInfo_bits_robIdx_flag = io_redirectInfo_bits_robIdx_flag; // @[src/main/scala/backend/scheduler/Scheduler.scala 90:29]
+endmodule

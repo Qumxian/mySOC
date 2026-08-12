@@ -1,0 +1,2052 @@
+module FlushableQueue(
+  input         clock,
+  input         reset,
+  output        io_enq_ready, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_valid, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [31:0] io_enq_bits_pc, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [31:0] io_enq_bits_fallThrough, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_taken, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [31:0] io_enq_bits_target, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [1:0]  io_enq_bits_takenOffset, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_valid, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_btbHit, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_btbIsJalr, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_btbIsJal, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_btbIsCall, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_btbIsRet, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [1:0]  io_enq_bits_meta_btbOffset, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [1:0]  io_enq_bits_meta_phtCounter, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [2:0]  io_enq_bits_meta_rasTop, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_enq_bits_meta_predTaken, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input  [31:0] io_enq_bits_meta_predTarget, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_deq_ready, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_valid, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [31:0] io_deq_bits_pc, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [31:0] io_deq_bits_fallThrough, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_taken, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [31:0] io_deq_bits_target, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [1:0]  io_deq_bits_takenOffset, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_valid, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_btbHit, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_btbIsJalr, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_btbIsJal, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_btbIsCall, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_btbIsRet, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [1:0]  io_deq_bits_meta_btbOffset, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [1:0]  io_deq_bits_meta_phtCounter, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [2:0]  io_deq_bits_meta_rasTop, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output        io_deq_bits_meta_predTaken, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  output [31:0] io_deq_bits_meta_predTarget, // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+  input         io_flush // @[src/main/scala/frontend/FrontendBundle.scala 198:14]
+);
+`ifdef RANDOMIZE_REG_INIT
+  reg [31:0] _RAND_0;
+  reg [31:0] _RAND_1;
+  reg [31:0] _RAND_2;
+  reg [31:0] _RAND_3;
+  reg [31:0] _RAND_4;
+  reg [31:0] _RAND_5;
+  reg [31:0] _RAND_6;
+  reg [31:0] _RAND_7;
+  reg [31:0] _RAND_8;
+  reg [31:0] _RAND_9;
+  reg [31:0] _RAND_10;
+  reg [31:0] _RAND_11;
+  reg [31:0] _RAND_12;
+  reg [31:0] _RAND_13;
+  reg [31:0] _RAND_14;
+  reg [31:0] _RAND_15;
+  reg [31:0] _RAND_16;
+  reg [31:0] _RAND_17;
+  reg [31:0] _RAND_18;
+  reg [31:0] _RAND_19;
+  reg [31:0] _RAND_20;
+  reg [31:0] _RAND_21;
+  reg [31:0] _RAND_22;
+  reg [31:0] _RAND_23;
+  reg [31:0] _RAND_24;
+  reg [31:0] _RAND_25;
+  reg [31:0] _RAND_26;
+  reg [31:0] _RAND_27;
+  reg [31:0] _RAND_28;
+  reg [31:0] _RAND_29;
+  reg [31:0] _RAND_30;
+  reg [31:0] _RAND_31;
+  reg [31:0] _RAND_32;
+  reg [31:0] _RAND_33;
+  reg [31:0] _RAND_34;
+  reg [31:0] _RAND_35;
+  reg [31:0] _RAND_36;
+  reg [31:0] _RAND_37;
+  reg [31:0] _RAND_38;
+  reg [31:0] _RAND_39;
+  reg [31:0] _RAND_40;
+  reg [31:0] _RAND_41;
+  reg [31:0] _RAND_42;
+  reg [31:0] _RAND_43;
+  reg [31:0] _RAND_44;
+  reg [31:0] _RAND_45;
+  reg [31:0] _RAND_46;
+  reg [31:0] _RAND_47;
+  reg [31:0] _RAND_48;
+  reg [31:0] _RAND_49;
+  reg [31:0] _RAND_50;
+  reg [31:0] _RAND_51;
+  reg [31:0] _RAND_52;
+  reg [31:0] _RAND_53;
+  reg [31:0] _RAND_54;
+  reg [31:0] _RAND_55;
+  reg [31:0] _RAND_56;
+  reg [31:0] _RAND_57;
+  reg [31:0] _RAND_58;
+  reg [31:0] _RAND_59;
+  reg [31:0] _RAND_60;
+  reg [31:0] _RAND_61;
+  reg [31:0] _RAND_62;
+  reg [31:0] _RAND_63;
+  reg [31:0] _RAND_64;
+  reg [31:0] _RAND_65;
+  reg [31:0] _RAND_66;
+  reg [31:0] _RAND_67;
+  reg [31:0] _RAND_68;
+  reg [31:0] _RAND_69;
+  reg [31:0] _RAND_70;
+  reg [31:0] _RAND_71;
+  reg [31:0] _RAND_72;
+  reg [31:0] _RAND_73;
+  reg [31:0] _RAND_74;
+  reg [31:0] _RAND_75;
+  reg [31:0] _RAND_76;
+  reg [31:0] _RAND_77;
+  reg [31:0] _RAND_78;
+  reg [31:0] _RAND_79;
+  reg [31:0] _RAND_80;
+  reg [31:0] _RAND_81;
+  reg [31:0] _RAND_82;
+  reg [31:0] _RAND_83;
+  reg [31:0] _RAND_84;
+  reg [31:0] _RAND_85;
+  reg [31:0] _RAND_86;
+  reg [31:0] _RAND_87;
+  reg [31:0] _RAND_88;
+  reg [31:0] _RAND_89;
+  reg [31:0] _RAND_90;
+  reg [31:0] _RAND_91;
+  reg [31:0] _RAND_92;
+  reg [31:0] _RAND_93;
+  reg [31:0] _RAND_94;
+  reg [31:0] _RAND_95;
+  reg [31:0] _RAND_96;
+  reg [31:0] _RAND_97;
+  reg [31:0] _RAND_98;
+  reg [31:0] _RAND_99;
+  reg [31:0] _RAND_100;
+  reg [31:0] _RAND_101;
+  reg [31:0] _RAND_102;
+  reg [31:0] _RAND_103;
+  reg [31:0] _RAND_104;
+  reg [31:0] _RAND_105;
+  reg [31:0] _RAND_106;
+  reg [31:0] _RAND_107;
+  reg [31:0] _RAND_108;
+  reg [31:0] _RAND_109;
+  reg [31:0] _RAND_110;
+  reg [31:0] _RAND_111;
+  reg [31:0] _RAND_112;
+  reg [31:0] _RAND_113;
+  reg [31:0] _RAND_114;
+  reg [31:0] _RAND_115;
+  reg [31:0] _RAND_116;
+  reg [31:0] _RAND_117;
+  reg [31:0] _RAND_118;
+  reg [31:0] _RAND_119;
+  reg [31:0] _RAND_120;
+  reg [31:0] _RAND_121;
+  reg [31:0] _RAND_122;
+  reg [31:0] _RAND_123;
+  reg [31:0] _RAND_124;
+  reg [31:0] _RAND_125;
+  reg [31:0] _RAND_126;
+  reg [31:0] _RAND_127;
+  reg [31:0] _RAND_128;
+  reg [31:0] _RAND_129;
+  reg [31:0] _RAND_130;
+`endif // RANDOMIZE_REG_INIT
+  reg [31:0] data_0_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_0_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_0_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_0_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_0_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_0_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_0_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_0_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_0_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_1_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_1_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_1_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_1_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_1_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_1_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_1_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_1_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_1_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_2_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_2_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_2_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_2_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_2_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_2_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_2_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_2_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_2_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_3_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_3_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_3_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_3_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_3_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_3_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_3_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_3_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_3_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_4_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_4_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_4_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_4_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_4_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_4_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_4_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_4_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_4_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_5_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_5_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_5_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_5_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_5_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_5_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_5_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_5_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_5_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_6_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_6_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_6_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_6_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_6_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_6_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_6_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_6_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_6_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_7_pc; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_7_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_taken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_7_target; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_7_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_7_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [1:0] data_7_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] data_7_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg  data_7_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [31:0] data_7_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+  reg [2:0] head; // @[src/main/scala/frontend/FrontendBundle.scala 207:23]
+  reg [2:0] tail; // @[src/main/scala/frontend/FrontendBundle.scala 208:23]
+  reg [3:0] count; // @[src/main/scala/frontend/FrontendBundle.scala 209:23]
+  wire  full = count == 4'h8; // @[src/main/scala/frontend/FrontendBundle.scala 214:21]
+  wire  empty = count == 4'h0; // @[src/main/scala/frontend/FrontendBundle.scala 215:21]
+  wire [31:0] _GEN_1 = 3'h1 == head ? data_1_pc : data_0_pc; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_2 = 3'h2 == head ? data_2_pc : _GEN_1; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_3 = 3'h3 == head ? data_3_pc : _GEN_2; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_4 = 3'h4 == head ? data_4_pc : _GEN_3; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_5 = 3'h5 == head ? data_5_pc : _GEN_4; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_6 = 3'h6 == head ? data_6_pc : _GEN_5; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_9 = 3'h1 == head ? data_1_fallThrough : data_0_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_10 = 3'h2 == head ? data_2_fallThrough : _GEN_9; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_11 = 3'h3 == head ? data_3_fallThrough : _GEN_10; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_12 = 3'h4 == head ? data_4_fallThrough : _GEN_11; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_13 = 3'h5 == head ? data_5_fallThrough : _GEN_12; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_14 = 3'h6 == head ? data_6_fallThrough : _GEN_13; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_17 = 3'h1 == head ? data_1_taken : data_0_taken; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_18 = 3'h2 == head ? data_2_taken : _GEN_17; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_19 = 3'h3 == head ? data_3_taken : _GEN_18; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_20 = 3'h4 == head ? data_4_taken : _GEN_19; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_21 = 3'h5 == head ? data_5_taken : _GEN_20; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_22 = 3'h6 == head ? data_6_taken : _GEN_21; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_25 = 3'h1 == head ? data_1_target : data_0_target; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_26 = 3'h2 == head ? data_2_target : _GEN_25; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_27 = 3'h3 == head ? data_3_target : _GEN_26; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_28 = 3'h4 == head ? data_4_target : _GEN_27; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_29 = 3'h5 == head ? data_5_target : _GEN_28; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_30 = 3'h6 == head ? data_6_target : _GEN_29; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_33 = 3'h1 == head ? data_1_takenOffset : data_0_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_34 = 3'h2 == head ? data_2_takenOffset : _GEN_33; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_35 = 3'h3 == head ? data_3_takenOffset : _GEN_34; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_36 = 3'h4 == head ? data_4_takenOffset : _GEN_35; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_37 = 3'h5 == head ? data_5_takenOffset : _GEN_36; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_38 = 3'h6 == head ? data_6_takenOffset : _GEN_37; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_41 = 3'h1 == head ? data_1_meta_valid : data_0_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_42 = 3'h2 == head ? data_2_meta_valid : _GEN_41; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_43 = 3'h3 == head ? data_3_meta_valid : _GEN_42; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_44 = 3'h4 == head ? data_4_meta_valid : _GEN_43; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_45 = 3'h5 == head ? data_5_meta_valid : _GEN_44; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_46 = 3'h6 == head ? data_6_meta_valid : _GEN_45; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_49 = 3'h1 == head ? data_1_meta_btbHit : data_0_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_50 = 3'h2 == head ? data_2_meta_btbHit : _GEN_49; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_51 = 3'h3 == head ? data_3_meta_btbHit : _GEN_50; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_52 = 3'h4 == head ? data_4_meta_btbHit : _GEN_51; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_53 = 3'h5 == head ? data_5_meta_btbHit : _GEN_52; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_54 = 3'h6 == head ? data_6_meta_btbHit : _GEN_53; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_57 = 3'h1 == head ? data_1_meta_btbIsJalr : data_0_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_58 = 3'h2 == head ? data_2_meta_btbIsJalr : _GEN_57; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_59 = 3'h3 == head ? data_3_meta_btbIsJalr : _GEN_58; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_60 = 3'h4 == head ? data_4_meta_btbIsJalr : _GEN_59; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_61 = 3'h5 == head ? data_5_meta_btbIsJalr : _GEN_60; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_62 = 3'h6 == head ? data_6_meta_btbIsJalr : _GEN_61; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_65 = 3'h1 == head ? data_1_meta_btbIsJal : data_0_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_66 = 3'h2 == head ? data_2_meta_btbIsJal : _GEN_65; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_67 = 3'h3 == head ? data_3_meta_btbIsJal : _GEN_66; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_68 = 3'h4 == head ? data_4_meta_btbIsJal : _GEN_67; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_69 = 3'h5 == head ? data_5_meta_btbIsJal : _GEN_68; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_70 = 3'h6 == head ? data_6_meta_btbIsJal : _GEN_69; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_73 = 3'h1 == head ? data_1_meta_btbIsCall : data_0_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_74 = 3'h2 == head ? data_2_meta_btbIsCall : _GEN_73; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_75 = 3'h3 == head ? data_3_meta_btbIsCall : _GEN_74; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_76 = 3'h4 == head ? data_4_meta_btbIsCall : _GEN_75; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_77 = 3'h5 == head ? data_5_meta_btbIsCall : _GEN_76; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_78 = 3'h6 == head ? data_6_meta_btbIsCall : _GEN_77; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_81 = 3'h1 == head ? data_1_meta_btbIsRet : data_0_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_82 = 3'h2 == head ? data_2_meta_btbIsRet : _GEN_81; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_83 = 3'h3 == head ? data_3_meta_btbIsRet : _GEN_82; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_84 = 3'h4 == head ? data_4_meta_btbIsRet : _GEN_83; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_85 = 3'h5 == head ? data_5_meta_btbIsRet : _GEN_84; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_86 = 3'h6 == head ? data_6_meta_btbIsRet : _GEN_85; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_89 = 3'h1 == head ? data_1_meta_btbOffset : data_0_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_90 = 3'h2 == head ? data_2_meta_btbOffset : _GEN_89; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_91 = 3'h3 == head ? data_3_meta_btbOffset : _GEN_90; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_92 = 3'h4 == head ? data_4_meta_btbOffset : _GEN_91; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_93 = 3'h5 == head ? data_5_meta_btbOffset : _GEN_92; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_94 = 3'h6 == head ? data_6_meta_btbOffset : _GEN_93; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_97 = 3'h1 == head ? data_1_meta_phtCounter : data_0_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_98 = 3'h2 == head ? data_2_meta_phtCounter : _GEN_97; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_99 = 3'h3 == head ? data_3_meta_phtCounter : _GEN_98; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_100 = 3'h4 == head ? data_4_meta_phtCounter : _GEN_99; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_101 = 3'h5 == head ? data_5_meta_phtCounter : _GEN_100; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [1:0] _GEN_102 = 3'h6 == head ? data_6_meta_phtCounter : _GEN_101; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_105 = 3'h1 == head ? data_1_meta_rasTop : data_0_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_106 = 3'h2 == head ? data_2_meta_rasTop : _GEN_105; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_107 = 3'h3 == head ? data_3_meta_rasTop : _GEN_106; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_108 = 3'h4 == head ? data_4_meta_rasTop : _GEN_107; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_109 = 3'h5 == head ? data_5_meta_rasTop : _GEN_108; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [2:0] _GEN_110 = 3'h6 == head ? data_6_meta_rasTop : _GEN_109; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_113 = 3'h1 == head ? data_1_meta_predTaken : data_0_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_114 = 3'h2 == head ? data_2_meta_predTaken : _GEN_113; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_115 = 3'h3 == head ? data_3_meta_predTaken : _GEN_114; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_116 = 3'h4 == head ? data_4_meta_predTaken : _GEN_115; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_117 = 3'h5 == head ? data_5_meta_predTaken : _GEN_116; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _GEN_118 = 3'h6 == head ? data_6_meta_predTaken : _GEN_117; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_121 = 3'h1 == head ? data_1_meta_predTarget : data_0_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_122 = 3'h2 == head ? data_2_meta_predTarget : _GEN_121; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_123 = 3'h3 == head ? data_3_meta_predTarget : _GEN_122; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_124 = 3'h4 == head ? data_4_meta_predTarget : _GEN_123; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_125 = 3'h5 == head ? data_5_meta_predTarget : _GEN_124; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire [31:0] _GEN_126 = 3'h6 == head ? data_6_meta_predTarget : _GEN_125; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  wire  _T = io_enq_ready & io_enq_valid; // @[src/main/scala/chisel3/util/Decoupled.scala 57:35]
+  wire  _T_1 = io_deq_ready & io_deq_valid; // @[src/main/scala/chisel3/util/Decoupled.scala 57:35]
+  wire [31:0] _GEN_128 = 3'h0 == tail ? io_enq_bits_pc : data_0_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_129 = 3'h1 == tail ? io_enq_bits_pc : data_1_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_130 = 3'h2 == tail ? io_enq_bits_pc : data_2_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_131 = 3'h3 == tail ? io_enq_bits_pc : data_3_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_132 = 3'h4 == tail ? io_enq_bits_pc : data_4_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_133 = 3'h5 == tail ? io_enq_bits_pc : data_5_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_134 = 3'h6 == tail ? io_enq_bits_pc : data_6_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_135 = 3'h7 == tail ? io_enq_bits_pc : data_7_pc; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_136 = 3'h0 == tail ? io_enq_bits_fallThrough : data_0_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_137 = 3'h1 == tail ? io_enq_bits_fallThrough : data_1_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_138 = 3'h2 == tail ? io_enq_bits_fallThrough : data_2_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_139 = 3'h3 == tail ? io_enq_bits_fallThrough : data_3_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_140 = 3'h4 == tail ? io_enq_bits_fallThrough : data_4_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_141 = 3'h5 == tail ? io_enq_bits_fallThrough : data_5_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_142 = 3'h6 == tail ? io_enq_bits_fallThrough : data_6_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_143 = 3'h7 == tail ? io_enq_bits_fallThrough : data_7_fallThrough; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_144 = 3'h0 == tail ? io_enq_bits_taken : data_0_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_145 = 3'h1 == tail ? io_enq_bits_taken : data_1_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_146 = 3'h2 == tail ? io_enq_bits_taken : data_2_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_147 = 3'h3 == tail ? io_enq_bits_taken : data_3_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_148 = 3'h4 == tail ? io_enq_bits_taken : data_4_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_149 = 3'h5 == tail ? io_enq_bits_taken : data_5_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_150 = 3'h6 == tail ? io_enq_bits_taken : data_6_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_151 = 3'h7 == tail ? io_enq_bits_taken : data_7_taken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_152 = 3'h0 == tail ? io_enq_bits_target : data_0_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_153 = 3'h1 == tail ? io_enq_bits_target : data_1_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_154 = 3'h2 == tail ? io_enq_bits_target : data_2_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_155 = 3'h3 == tail ? io_enq_bits_target : data_3_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_156 = 3'h4 == tail ? io_enq_bits_target : data_4_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_157 = 3'h5 == tail ? io_enq_bits_target : data_5_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_158 = 3'h6 == tail ? io_enq_bits_target : data_6_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_159 = 3'h7 == tail ? io_enq_bits_target : data_7_target; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_160 = 3'h0 == tail ? io_enq_bits_takenOffset : data_0_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_161 = 3'h1 == tail ? io_enq_bits_takenOffset : data_1_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_162 = 3'h2 == tail ? io_enq_bits_takenOffset : data_2_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_163 = 3'h3 == tail ? io_enq_bits_takenOffset : data_3_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_164 = 3'h4 == tail ? io_enq_bits_takenOffset : data_4_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_165 = 3'h5 == tail ? io_enq_bits_takenOffset : data_5_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_166 = 3'h6 == tail ? io_enq_bits_takenOffset : data_6_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_167 = 3'h7 == tail ? io_enq_bits_takenOffset : data_7_takenOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_168 = 3'h0 == tail ? io_enq_bits_meta_valid : data_0_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_169 = 3'h1 == tail ? io_enq_bits_meta_valid : data_1_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_170 = 3'h2 == tail ? io_enq_bits_meta_valid : data_2_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_171 = 3'h3 == tail ? io_enq_bits_meta_valid : data_3_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_172 = 3'h4 == tail ? io_enq_bits_meta_valid : data_4_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_173 = 3'h5 == tail ? io_enq_bits_meta_valid : data_5_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_174 = 3'h6 == tail ? io_enq_bits_meta_valid : data_6_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_175 = 3'h7 == tail ? io_enq_bits_meta_valid : data_7_meta_valid; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_176 = 3'h0 == tail ? io_enq_bits_meta_btbHit : data_0_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_177 = 3'h1 == tail ? io_enq_bits_meta_btbHit : data_1_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_178 = 3'h2 == tail ? io_enq_bits_meta_btbHit : data_2_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_179 = 3'h3 == tail ? io_enq_bits_meta_btbHit : data_3_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_180 = 3'h4 == tail ? io_enq_bits_meta_btbHit : data_4_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_181 = 3'h5 == tail ? io_enq_bits_meta_btbHit : data_5_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_182 = 3'h6 == tail ? io_enq_bits_meta_btbHit : data_6_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_183 = 3'h7 == tail ? io_enq_bits_meta_btbHit : data_7_meta_btbHit; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_184 = 3'h0 == tail ? io_enq_bits_meta_btbIsJalr : data_0_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_185 = 3'h1 == tail ? io_enq_bits_meta_btbIsJalr : data_1_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_186 = 3'h2 == tail ? io_enq_bits_meta_btbIsJalr : data_2_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_187 = 3'h3 == tail ? io_enq_bits_meta_btbIsJalr : data_3_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_188 = 3'h4 == tail ? io_enq_bits_meta_btbIsJalr : data_4_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_189 = 3'h5 == tail ? io_enq_bits_meta_btbIsJalr : data_5_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_190 = 3'h6 == tail ? io_enq_bits_meta_btbIsJalr : data_6_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_191 = 3'h7 == tail ? io_enq_bits_meta_btbIsJalr : data_7_meta_btbIsJalr; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_192 = 3'h0 == tail ? io_enq_bits_meta_btbIsJal : data_0_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_193 = 3'h1 == tail ? io_enq_bits_meta_btbIsJal : data_1_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_194 = 3'h2 == tail ? io_enq_bits_meta_btbIsJal : data_2_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_195 = 3'h3 == tail ? io_enq_bits_meta_btbIsJal : data_3_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_196 = 3'h4 == tail ? io_enq_bits_meta_btbIsJal : data_4_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_197 = 3'h5 == tail ? io_enq_bits_meta_btbIsJal : data_5_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_198 = 3'h6 == tail ? io_enq_bits_meta_btbIsJal : data_6_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_199 = 3'h7 == tail ? io_enq_bits_meta_btbIsJal : data_7_meta_btbIsJal; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_200 = 3'h0 == tail ? io_enq_bits_meta_btbIsCall : data_0_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_201 = 3'h1 == tail ? io_enq_bits_meta_btbIsCall : data_1_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_202 = 3'h2 == tail ? io_enq_bits_meta_btbIsCall : data_2_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_203 = 3'h3 == tail ? io_enq_bits_meta_btbIsCall : data_3_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_204 = 3'h4 == tail ? io_enq_bits_meta_btbIsCall : data_4_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_205 = 3'h5 == tail ? io_enq_bits_meta_btbIsCall : data_5_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_206 = 3'h6 == tail ? io_enq_bits_meta_btbIsCall : data_6_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_207 = 3'h7 == tail ? io_enq_bits_meta_btbIsCall : data_7_meta_btbIsCall; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_208 = 3'h0 == tail ? io_enq_bits_meta_btbIsRet : data_0_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_209 = 3'h1 == tail ? io_enq_bits_meta_btbIsRet : data_1_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_210 = 3'h2 == tail ? io_enq_bits_meta_btbIsRet : data_2_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_211 = 3'h3 == tail ? io_enq_bits_meta_btbIsRet : data_3_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_212 = 3'h4 == tail ? io_enq_bits_meta_btbIsRet : data_4_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_213 = 3'h5 == tail ? io_enq_bits_meta_btbIsRet : data_5_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_214 = 3'h6 == tail ? io_enq_bits_meta_btbIsRet : data_6_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_215 = 3'h7 == tail ? io_enq_bits_meta_btbIsRet : data_7_meta_btbIsRet; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_216 = 3'h0 == tail ? io_enq_bits_meta_btbOffset : data_0_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_217 = 3'h1 == tail ? io_enq_bits_meta_btbOffset : data_1_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_218 = 3'h2 == tail ? io_enq_bits_meta_btbOffset : data_2_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_219 = 3'h3 == tail ? io_enq_bits_meta_btbOffset : data_3_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_220 = 3'h4 == tail ? io_enq_bits_meta_btbOffset : data_4_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_221 = 3'h5 == tail ? io_enq_bits_meta_btbOffset : data_5_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_222 = 3'h6 == tail ? io_enq_bits_meta_btbOffset : data_6_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_223 = 3'h7 == tail ? io_enq_bits_meta_btbOffset : data_7_meta_btbOffset; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_224 = 3'h0 == tail ? io_enq_bits_meta_phtCounter : data_0_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_225 = 3'h1 == tail ? io_enq_bits_meta_phtCounter : data_1_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_226 = 3'h2 == tail ? io_enq_bits_meta_phtCounter : data_2_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_227 = 3'h3 == tail ? io_enq_bits_meta_phtCounter : data_3_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_228 = 3'h4 == tail ? io_enq_bits_meta_phtCounter : data_4_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_229 = 3'h5 == tail ? io_enq_bits_meta_phtCounter : data_5_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_230 = 3'h6 == tail ? io_enq_bits_meta_phtCounter : data_6_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [1:0] _GEN_231 = 3'h7 == tail ? io_enq_bits_meta_phtCounter : data_7_meta_phtCounter; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_232 = 3'h0 == tail ? io_enq_bits_meta_rasTop : data_0_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_233 = 3'h1 == tail ? io_enq_bits_meta_rasTop : data_1_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_234 = 3'h2 == tail ? io_enq_bits_meta_rasTop : data_2_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_235 = 3'h3 == tail ? io_enq_bits_meta_rasTop : data_3_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_236 = 3'h4 == tail ? io_enq_bits_meta_rasTop : data_4_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_237 = 3'h5 == tail ? io_enq_bits_meta_rasTop : data_5_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_238 = 3'h6 == tail ? io_enq_bits_meta_rasTop : data_6_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _GEN_239 = 3'h7 == tail ? io_enq_bits_meta_rasTop : data_7_meta_rasTop; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_240 = 3'h0 == tail ? io_enq_bits_meta_predTaken : data_0_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_241 = 3'h1 == tail ? io_enq_bits_meta_predTaken : data_1_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_242 = 3'h2 == tail ? io_enq_bits_meta_predTaken : data_2_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_243 = 3'h3 == tail ? io_enq_bits_meta_predTaken : data_3_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_244 = 3'h4 == tail ? io_enq_bits_meta_predTaken : data_4_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_245 = 3'h5 == tail ? io_enq_bits_meta_predTaken : data_5_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_246 = 3'h6 == tail ? io_enq_bits_meta_predTaken : data_6_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire  _GEN_247 = 3'h7 == tail ? io_enq_bits_meta_predTaken : data_7_meta_predTaken; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_248 = 3'h0 == tail ? io_enq_bits_meta_predTarget : data_0_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_249 = 3'h1 == tail ? io_enq_bits_meta_predTarget : data_1_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_250 = 3'h2 == tail ? io_enq_bits_meta_predTarget : data_2_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_251 = 3'h3 == tail ? io_enq_bits_meta_predTarget : data_3_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_252 = 3'h4 == tail ? io_enq_bits_meta_predTarget : data_4_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_253 = 3'h5 == tail ? io_enq_bits_meta_predTarget : data_5_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_254 = 3'h6 == tail ? io_enq_bits_meta_predTarget : data_6_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [31:0] _GEN_255 = 3'h7 == tail ? io_enq_bits_meta_predTarget : data_7_meta_predTarget; // @[src/main/scala/frontend/FrontendBundle.scala 229:{17,17} 205:23]
+  wire [2:0] _head_T_2 = head + 3'h1; // @[src/main/scala/frontend/FrontendBundle.scala 232:53]
+  wire [2:0] _head_T_3 = head == 3'h7 ? 3'h0 : _head_T_2; // @[src/main/scala/frontend/FrontendBundle.scala 232:16]
+  wire [2:0] _tail_T_2 = tail + 3'h1; // @[src/main/scala/frontend/FrontendBundle.scala 233:53]
+  wire [2:0] _tail_T_3 = tail == 3'h7 ? 3'h0 : _tail_T_2; // @[src/main/scala/frontend/FrontendBundle.scala 233:16]
+  wire [3:0] _count_T_1 = count + 4'h1; // @[src/main/scala/frontend/FrontendBundle.scala 239:20]
+  wire [3:0] _count_T_3 = count - 4'h1; // @[src/main/scala/frontend/FrontendBundle.scala 244:20]
+  wire [2:0] _GEN_424 = _T_1 ? _head_T_3 : head; // @[src/main/scala/frontend/FrontendBundle.scala 240:27 243:10 207:23]
+  wire [3:0] _GEN_425 = _T_1 ? _count_T_3 : count; // @[src/main/scala/frontend/FrontendBundle.scala 240:27 244:11 209:23]
+  assign io_enq_ready = ~full; // @[src/main/scala/frontend/FrontendBundle.scala 217:19]
+  assign io_deq_valid = ~empty; // @[src/main/scala/frontend/FrontendBundle.scala 218:19]
+  assign io_deq_bits_pc = 3'h7 == head ? data_7_pc : _GEN_6; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_fallThrough = 3'h7 == head ? data_7_fallThrough : _GEN_14; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_taken = 3'h7 == head ? data_7_taken : _GEN_22; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_target = 3'h7 == head ? data_7_target : _GEN_30; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_takenOffset = 3'h7 == head ? data_7_takenOffset : _GEN_38; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_valid = 3'h7 == head ? data_7_meta_valid : _GEN_46; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbHit = 3'h7 == head ? data_7_meta_btbHit : _GEN_54; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbIsJalr = 3'h7 == head ? data_7_meta_btbIsJalr : _GEN_62; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbIsJal = 3'h7 == head ? data_7_meta_btbIsJal : _GEN_70; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbIsCall = 3'h7 == head ? data_7_meta_btbIsCall : _GEN_78; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbIsRet = 3'h7 == head ? data_7_meta_btbIsRet : _GEN_86; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_btbOffset = 3'h7 == head ? data_7_meta_btbOffset : _GEN_94; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_phtCounter = 3'h7 == head ? data_7_meta_phtCounter : _GEN_102; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_rasTop = 3'h7 == head ? data_7_meta_rasTop : _GEN_110; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_predTaken = 3'h7 == head ? data_7_meta_predTaken : _GEN_118; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  assign io_deq_bits_meta_predTarget = 3'h7 == head ? data_7_meta_predTarget : _GEN_126; // @[src/main/scala/frontend/FrontendBundle.scala 219:{16,16}]
+  always @(posedge clock) begin
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_pc <= _GEN_128;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_pc <= _GEN_128;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_fallThrough <= _GEN_136;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_fallThrough <= _GEN_136;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_taken <= _GEN_144;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_taken <= _GEN_144;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_target <= _GEN_152;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_target <= _GEN_152;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_takenOffset <= _GEN_160;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_takenOffset <= _GEN_160;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_valid <= _GEN_168;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_valid <= _GEN_168;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbHit <= _GEN_176;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbHit <= _GEN_176;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbIsJalr <= _GEN_184;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbIsJalr <= _GEN_184;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbIsJal <= _GEN_192;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbIsJal <= _GEN_192;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbIsCall <= _GEN_200;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbIsCall <= _GEN_200;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbIsRet <= _GEN_208;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbIsRet <= _GEN_208;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_btbOffset <= _GEN_216;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_btbOffset <= _GEN_216;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_phtCounter <= _GEN_224;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_phtCounter <= _GEN_224;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_rasTop <= _GEN_232;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_rasTop <= _GEN_232;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_predTaken <= _GEN_240;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_predTaken <= _GEN_240;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_0_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_0_meta_predTarget <= _GEN_248;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_0_meta_predTarget <= _GEN_248;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_pc <= _GEN_129;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_pc <= _GEN_129;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_fallThrough <= _GEN_137;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_fallThrough <= _GEN_137;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_taken <= _GEN_145;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_taken <= _GEN_145;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_target <= _GEN_153;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_target <= _GEN_153;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_takenOffset <= _GEN_161;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_takenOffset <= _GEN_161;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_valid <= _GEN_169;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_valid <= _GEN_169;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbHit <= _GEN_177;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbHit <= _GEN_177;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbIsJalr <= _GEN_185;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbIsJalr <= _GEN_185;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbIsJal <= _GEN_193;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbIsJal <= _GEN_193;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbIsCall <= _GEN_201;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbIsCall <= _GEN_201;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbIsRet <= _GEN_209;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbIsRet <= _GEN_209;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_btbOffset <= _GEN_217;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_btbOffset <= _GEN_217;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_phtCounter <= _GEN_225;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_phtCounter <= _GEN_225;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_rasTop <= _GEN_233;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_rasTop <= _GEN_233;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_predTaken <= _GEN_241;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_predTaken <= _GEN_241;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_1_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_1_meta_predTarget <= _GEN_249;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_1_meta_predTarget <= _GEN_249;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_pc <= _GEN_130;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_pc <= _GEN_130;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_fallThrough <= _GEN_138;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_fallThrough <= _GEN_138;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_taken <= _GEN_146;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_taken <= _GEN_146;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_target <= _GEN_154;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_target <= _GEN_154;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_takenOffset <= _GEN_162;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_takenOffset <= _GEN_162;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_valid <= _GEN_170;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_valid <= _GEN_170;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbHit <= _GEN_178;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbHit <= _GEN_178;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbIsJalr <= _GEN_186;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbIsJalr <= _GEN_186;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbIsJal <= _GEN_194;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbIsJal <= _GEN_194;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbIsCall <= _GEN_202;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbIsCall <= _GEN_202;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbIsRet <= _GEN_210;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbIsRet <= _GEN_210;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_btbOffset <= _GEN_218;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_btbOffset <= _GEN_218;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_phtCounter <= _GEN_226;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_phtCounter <= _GEN_226;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_rasTop <= _GEN_234;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_rasTop <= _GEN_234;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_predTaken <= _GEN_242;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_predTaken <= _GEN_242;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_2_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_2_meta_predTarget <= _GEN_250;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_2_meta_predTarget <= _GEN_250;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_pc <= _GEN_131;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_pc <= _GEN_131;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_fallThrough <= _GEN_139;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_fallThrough <= _GEN_139;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_taken <= _GEN_147;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_taken <= _GEN_147;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_target <= _GEN_155;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_target <= _GEN_155;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_takenOffset <= _GEN_163;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_takenOffset <= _GEN_163;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_valid <= _GEN_171;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_valid <= _GEN_171;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbHit <= _GEN_179;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbHit <= _GEN_179;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbIsJalr <= _GEN_187;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbIsJalr <= _GEN_187;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbIsJal <= _GEN_195;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbIsJal <= _GEN_195;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbIsCall <= _GEN_203;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbIsCall <= _GEN_203;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbIsRet <= _GEN_211;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbIsRet <= _GEN_211;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_btbOffset <= _GEN_219;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_btbOffset <= _GEN_219;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_phtCounter <= _GEN_227;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_phtCounter <= _GEN_227;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_rasTop <= _GEN_235;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_rasTop <= _GEN_235;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_predTaken <= _GEN_243;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_predTaken <= _GEN_243;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_3_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_3_meta_predTarget <= _GEN_251;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_3_meta_predTarget <= _GEN_251;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_pc <= _GEN_132;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_pc <= _GEN_132;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_fallThrough <= _GEN_140;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_fallThrough <= _GEN_140;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_taken <= _GEN_148;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_taken <= _GEN_148;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_target <= _GEN_156;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_target <= _GEN_156;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_takenOffset <= _GEN_164;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_takenOffset <= _GEN_164;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_valid <= _GEN_172;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_valid <= _GEN_172;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbHit <= _GEN_180;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbHit <= _GEN_180;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbIsJalr <= _GEN_188;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbIsJalr <= _GEN_188;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbIsJal <= _GEN_196;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbIsJal <= _GEN_196;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbIsCall <= _GEN_204;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbIsCall <= _GEN_204;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbIsRet <= _GEN_212;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbIsRet <= _GEN_212;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_btbOffset <= _GEN_220;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_btbOffset <= _GEN_220;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_phtCounter <= _GEN_228;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_phtCounter <= _GEN_228;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_rasTop <= _GEN_236;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_rasTop <= _GEN_236;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_predTaken <= _GEN_244;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_predTaken <= _GEN_244;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_4_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_4_meta_predTarget <= _GEN_252;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_4_meta_predTarget <= _GEN_252;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_pc <= _GEN_133;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_pc <= _GEN_133;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_fallThrough <= _GEN_141;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_fallThrough <= _GEN_141;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_taken <= _GEN_149;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_taken <= _GEN_149;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_target <= _GEN_157;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_target <= _GEN_157;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_takenOffset <= _GEN_165;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_takenOffset <= _GEN_165;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_valid <= _GEN_173;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_valid <= _GEN_173;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbHit <= _GEN_181;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbHit <= _GEN_181;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbIsJalr <= _GEN_189;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbIsJalr <= _GEN_189;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbIsJal <= _GEN_197;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbIsJal <= _GEN_197;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbIsCall <= _GEN_205;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbIsCall <= _GEN_205;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbIsRet <= _GEN_213;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbIsRet <= _GEN_213;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_btbOffset <= _GEN_221;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_btbOffset <= _GEN_221;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_phtCounter <= _GEN_229;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_phtCounter <= _GEN_229;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_rasTop <= _GEN_237;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_rasTop <= _GEN_237;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_predTaken <= _GEN_245;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_predTaken <= _GEN_245;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_5_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_5_meta_predTarget <= _GEN_253;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_5_meta_predTarget <= _GEN_253;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_pc <= _GEN_134;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_pc <= _GEN_134;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_fallThrough <= _GEN_142;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_fallThrough <= _GEN_142;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_taken <= _GEN_150;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_taken <= _GEN_150;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_target <= _GEN_158;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_target <= _GEN_158;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_takenOffset <= _GEN_166;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_takenOffset <= _GEN_166;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_valid <= _GEN_174;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_valid <= _GEN_174;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbHit <= _GEN_182;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbHit <= _GEN_182;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbIsJalr <= _GEN_190;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbIsJalr <= _GEN_190;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbIsJal <= _GEN_198;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbIsJal <= _GEN_198;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbIsCall <= _GEN_206;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbIsCall <= _GEN_206;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbIsRet <= _GEN_214;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbIsRet <= _GEN_214;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_btbOffset <= _GEN_222;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_btbOffset <= _GEN_222;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_phtCounter <= _GEN_230;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_phtCounter <= _GEN_230;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_rasTop <= _GEN_238;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_rasTop <= _GEN_238;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_predTaken <= _GEN_246;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_predTaken <= _GEN_246;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_6_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_6_meta_predTarget <= _GEN_254;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_6_meta_predTarget <= _GEN_254;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_pc <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_pc <= _GEN_135;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_pc <= _GEN_135;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_fallThrough <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_fallThrough <= _GEN_143;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_fallThrough <= _GEN_143;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_taken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_taken <= _GEN_151;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_taken <= _GEN_151;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_target <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_target <= _GEN_159;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_target <= _GEN_159;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_takenOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_takenOffset <= _GEN_167;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_takenOffset <= _GEN_167;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_valid <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_valid <= _GEN_175;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_valid <= _GEN_175;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbHit <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbHit <= _GEN_183;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbHit <= _GEN_183;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbIsJalr <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbIsJalr <= _GEN_191;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbIsJalr <= _GEN_191;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbIsJal <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbIsJal <= _GEN_199;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbIsJal <= _GEN_199;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbIsCall <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbIsCall <= _GEN_207;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbIsCall <= _GEN_207;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbIsRet <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbIsRet <= _GEN_215;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbIsRet <= _GEN_215;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_btbOffset <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_btbOffset <= _GEN_223;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_btbOffset <= _GEN_223;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_phtCounter <= 2'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_phtCounter <= _GEN_231;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_phtCounter <= _GEN_231;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_rasTop <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_rasTop <= _GEN_239;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_rasTop <= _GEN_239;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_predTaken <= 1'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_predTaken <= _GEN_247;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_predTaken <= _GEN_247;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+      data_7_meta_predTarget <= 32'h0; // @[src/main/scala/frontend/FrontendBundle.scala 205:23]
+    end else if (!(io_flush)) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+        data_7_meta_predTarget <= _GEN_255;
+      end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        data_7_meta_predTarget <= _GEN_255;
+      end
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 207:23]
+      head <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 207:23]
+    end else if (io_flush) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      head <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 224:11]
+    end else if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+      if (head == 3'h7) begin // @[src/main/scala/frontend/FrontendBundle.scala 232:16]
+        head <= 3'h0;
+      end else begin
+        head <= _head_T_2;
+      end
+    end else if (!(_T)) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+      head <= _GEN_424;
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 208:23]
+      tail <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 208:23]
+    end else if (io_flush) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      tail <= 3'h0; // @[src/main/scala/frontend/FrontendBundle.scala 225:11]
+    end else if (_T & _T_1) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+      tail <= _tail_T_3; // @[src/main/scala/frontend/FrontendBundle.scala 233:10]
+    end else if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+      tail <= _tail_T_3; // @[src/main/scala/frontend/FrontendBundle.scala 238:10]
+    end
+    if (reset) begin // @[src/main/scala/frontend/FrontendBundle.scala 209:23]
+      count <= 4'h0; // @[src/main/scala/frontend/FrontendBundle.scala 209:23]
+    end else if (io_flush) begin // @[src/main/scala/frontend/FrontendBundle.scala 222:18]
+      count <= 4'h0; // @[src/main/scala/frontend/FrontendBundle.scala 226:11]
+    end else if (!(_T & _T_1)) begin // @[src/main/scala/frontend/FrontendBundle.scala 227:42]
+      if (_T) begin // @[src/main/scala/frontend/FrontendBundle.scala 234:27]
+        count <= _count_T_1; // @[src/main/scala/frontend/FrontendBundle.scala 239:11]
+      end else begin
+        count <= _GEN_425;
+      end
+    end
+  end
+// Register and memory initialization
+`ifdef RANDOMIZE_GARBAGE_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_INVALID_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_REG_INIT
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+`define RANDOMIZE
+`endif
+`ifndef RANDOM
+`define RANDOM $random
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+  integer initvar;
+`endif
+`ifndef SYNTHESIS
+`ifdef FIRRTL_BEFORE_INITIAL
+`FIRRTL_BEFORE_INITIAL
+`endif
+initial begin
+  `ifdef RANDOMIZE
+    `ifdef INIT_RANDOM
+      `INIT_RANDOM
+    `endif
+    `ifndef VERILATOR
+      `ifdef RANDOMIZE_DELAY
+        #`RANDOMIZE_DELAY begin end
+      `else
+        #0.002 begin end
+      `endif
+    `endif
+`ifdef RANDOMIZE_REG_INIT
+  _RAND_0 = {1{`RANDOM}};
+  data_0_pc = _RAND_0[31:0];
+  _RAND_1 = {1{`RANDOM}};
+  data_0_fallThrough = _RAND_1[31:0];
+  _RAND_2 = {1{`RANDOM}};
+  data_0_taken = _RAND_2[0:0];
+  _RAND_3 = {1{`RANDOM}};
+  data_0_target = _RAND_3[31:0];
+  _RAND_4 = {1{`RANDOM}};
+  data_0_takenOffset = _RAND_4[1:0];
+  _RAND_5 = {1{`RANDOM}};
+  data_0_meta_valid = _RAND_5[0:0];
+  _RAND_6 = {1{`RANDOM}};
+  data_0_meta_btbHit = _RAND_6[0:0];
+  _RAND_7 = {1{`RANDOM}};
+  data_0_meta_btbIsJalr = _RAND_7[0:0];
+  _RAND_8 = {1{`RANDOM}};
+  data_0_meta_btbIsJal = _RAND_8[0:0];
+  _RAND_9 = {1{`RANDOM}};
+  data_0_meta_btbIsCall = _RAND_9[0:0];
+  _RAND_10 = {1{`RANDOM}};
+  data_0_meta_btbIsRet = _RAND_10[0:0];
+  _RAND_11 = {1{`RANDOM}};
+  data_0_meta_btbOffset = _RAND_11[1:0];
+  _RAND_12 = {1{`RANDOM}};
+  data_0_meta_phtCounter = _RAND_12[1:0];
+  _RAND_13 = {1{`RANDOM}};
+  data_0_meta_rasTop = _RAND_13[2:0];
+  _RAND_14 = {1{`RANDOM}};
+  data_0_meta_predTaken = _RAND_14[0:0];
+  _RAND_15 = {1{`RANDOM}};
+  data_0_meta_predTarget = _RAND_15[31:0];
+  _RAND_16 = {1{`RANDOM}};
+  data_1_pc = _RAND_16[31:0];
+  _RAND_17 = {1{`RANDOM}};
+  data_1_fallThrough = _RAND_17[31:0];
+  _RAND_18 = {1{`RANDOM}};
+  data_1_taken = _RAND_18[0:0];
+  _RAND_19 = {1{`RANDOM}};
+  data_1_target = _RAND_19[31:0];
+  _RAND_20 = {1{`RANDOM}};
+  data_1_takenOffset = _RAND_20[1:0];
+  _RAND_21 = {1{`RANDOM}};
+  data_1_meta_valid = _RAND_21[0:0];
+  _RAND_22 = {1{`RANDOM}};
+  data_1_meta_btbHit = _RAND_22[0:0];
+  _RAND_23 = {1{`RANDOM}};
+  data_1_meta_btbIsJalr = _RAND_23[0:0];
+  _RAND_24 = {1{`RANDOM}};
+  data_1_meta_btbIsJal = _RAND_24[0:0];
+  _RAND_25 = {1{`RANDOM}};
+  data_1_meta_btbIsCall = _RAND_25[0:0];
+  _RAND_26 = {1{`RANDOM}};
+  data_1_meta_btbIsRet = _RAND_26[0:0];
+  _RAND_27 = {1{`RANDOM}};
+  data_1_meta_btbOffset = _RAND_27[1:0];
+  _RAND_28 = {1{`RANDOM}};
+  data_1_meta_phtCounter = _RAND_28[1:0];
+  _RAND_29 = {1{`RANDOM}};
+  data_1_meta_rasTop = _RAND_29[2:0];
+  _RAND_30 = {1{`RANDOM}};
+  data_1_meta_predTaken = _RAND_30[0:0];
+  _RAND_31 = {1{`RANDOM}};
+  data_1_meta_predTarget = _RAND_31[31:0];
+  _RAND_32 = {1{`RANDOM}};
+  data_2_pc = _RAND_32[31:0];
+  _RAND_33 = {1{`RANDOM}};
+  data_2_fallThrough = _RAND_33[31:0];
+  _RAND_34 = {1{`RANDOM}};
+  data_2_taken = _RAND_34[0:0];
+  _RAND_35 = {1{`RANDOM}};
+  data_2_target = _RAND_35[31:0];
+  _RAND_36 = {1{`RANDOM}};
+  data_2_takenOffset = _RAND_36[1:0];
+  _RAND_37 = {1{`RANDOM}};
+  data_2_meta_valid = _RAND_37[0:0];
+  _RAND_38 = {1{`RANDOM}};
+  data_2_meta_btbHit = _RAND_38[0:0];
+  _RAND_39 = {1{`RANDOM}};
+  data_2_meta_btbIsJalr = _RAND_39[0:0];
+  _RAND_40 = {1{`RANDOM}};
+  data_2_meta_btbIsJal = _RAND_40[0:0];
+  _RAND_41 = {1{`RANDOM}};
+  data_2_meta_btbIsCall = _RAND_41[0:0];
+  _RAND_42 = {1{`RANDOM}};
+  data_2_meta_btbIsRet = _RAND_42[0:0];
+  _RAND_43 = {1{`RANDOM}};
+  data_2_meta_btbOffset = _RAND_43[1:0];
+  _RAND_44 = {1{`RANDOM}};
+  data_2_meta_phtCounter = _RAND_44[1:0];
+  _RAND_45 = {1{`RANDOM}};
+  data_2_meta_rasTop = _RAND_45[2:0];
+  _RAND_46 = {1{`RANDOM}};
+  data_2_meta_predTaken = _RAND_46[0:0];
+  _RAND_47 = {1{`RANDOM}};
+  data_2_meta_predTarget = _RAND_47[31:0];
+  _RAND_48 = {1{`RANDOM}};
+  data_3_pc = _RAND_48[31:0];
+  _RAND_49 = {1{`RANDOM}};
+  data_3_fallThrough = _RAND_49[31:0];
+  _RAND_50 = {1{`RANDOM}};
+  data_3_taken = _RAND_50[0:0];
+  _RAND_51 = {1{`RANDOM}};
+  data_3_target = _RAND_51[31:0];
+  _RAND_52 = {1{`RANDOM}};
+  data_3_takenOffset = _RAND_52[1:0];
+  _RAND_53 = {1{`RANDOM}};
+  data_3_meta_valid = _RAND_53[0:0];
+  _RAND_54 = {1{`RANDOM}};
+  data_3_meta_btbHit = _RAND_54[0:0];
+  _RAND_55 = {1{`RANDOM}};
+  data_3_meta_btbIsJalr = _RAND_55[0:0];
+  _RAND_56 = {1{`RANDOM}};
+  data_3_meta_btbIsJal = _RAND_56[0:0];
+  _RAND_57 = {1{`RANDOM}};
+  data_3_meta_btbIsCall = _RAND_57[0:0];
+  _RAND_58 = {1{`RANDOM}};
+  data_3_meta_btbIsRet = _RAND_58[0:0];
+  _RAND_59 = {1{`RANDOM}};
+  data_3_meta_btbOffset = _RAND_59[1:0];
+  _RAND_60 = {1{`RANDOM}};
+  data_3_meta_phtCounter = _RAND_60[1:0];
+  _RAND_61 = {1{`RANDOM}};
+  data_3_meta_rasTop = _RAND_61[2:0];
+  _RAND_62 = {1{`RANDOM}};
+  data_3_meta_predTaken = _RAND_62[0:0];
+  _RAND_63 = {1{`RANDOM}};
+  data_3_meta_predTarget = _RAND_63[31:0];
+  _RAND_64 = {1{`RANDOM}};
+  data_4_pc = _RAND_64[31:0];
+  _RAND_65 = {1{`RANDOM}};
+  data_4_fallThrough = _RAND_65[31:0];
+  _RAND_66 = {1{`RANDOM}};
+  data_4_taken = _RAND_66[0:0];
+  _RAND_67 = {1{`RANDOM}};
+  data_4_target = _RAND_67[31:0];
+  _RAND_68 = {1{`RANDOM}};
+  data_4_takenOffset = _RAND_68[1:0];
+  _RAND_69 = {1{`RANDOM}};
+  data_4_meta_valid = _RAND_69[0:0];
+  _RAND_70 = {1{`RANDOM}};
+  data_4_meta_btbHit = _RAND_70[0:0];
+  _RAND_71 = {1{`RANDOM}};
+  data_4_meta_btbIsJalr = _RAND_71[0:0];
+  _RAND_72 = {1{`RANDOM}};
+  data_4_meta_btbIsJal = _RAND_72[0:0];
+  _RAND_73 = {1{`RANDOM}};
+  data_4_meta_btbIsCall = _RAND_73[0:0];
+  _RAND_74 = {1{`RANDOM}};
+  data_4_meta_btbIsRet = _RAND_74[0:0];
+  _RAND_75 = {1{`RANDOM}};
+  data_4_meta_btbOffset = _RAND_75[1:0];
+  _RAND_76 = {1{`RANDOM}};
+  data_4_meta_phtCounter = _RAND_76[1:0];
+  _RAND_77 = {1{`RANDOM}};
+  data_4_meta_rasTop = _RAND_77[2:0];
+  _RAND_78 = {1{`RANDOM}};
+  data_4_meta_predTaken = _RAND_78[0:0];
+  _RAND_79 = {1{`RANDOM}};
+  data_4_meta_predTarget = _RAND_79[31:0];
+  _RAND_80 = {1{`RANDOM}};
+  data_5_pc = _RAND_80[31:0];
+  _RAND_81 = {1{`RANDOM}};
+  data_5_fallThrough = _RAND_81[31:0];
+  _RAND_82 = {1{`RANDOM}};
+  data_5_taken = _RAND_82[0:0];
+  _RAND_83 = {1{`RANDOM}};
+  data_5_target = _RAND_83[31:0];
+  _RAND_84 = {1{`RANDOM}};
+  data_5_takenOffset = _RAND_84[1:0];
+  _RAND_85 = {1{`RANDOM}};
+  data_5_meta_valid = _RAND_85[0:0];
+  _RAND_86 = {1{`RANDOM}};
+  data_5_meta_btbHit = _RAND_86[0:0];
+  _RAND_87 = {1{`RANDOM}};
+  data_5_meta_btbIsJalr = _RAND_87[0:0];
+  _RAND_88 = {1{`RANDOM}};
+  data_5_meta_btbIsJal = _RAND_88[0:0];
+  _RAND_89 = {1{`RANDOM}};
+  data_5_meta_btbIsCall = _RAND_89[0:0];
+  _RAND_90 = {1{`RANDOM}};
+  data_5_meta_btbIsRet = _RAND_90[0:0];
+  _RAND_91 = {1{`RANDOM}};
+  data_5_meta_btbOffset = _RAND_91[1:0];
+  _RAND_92 = {1{`RANDOM}};
+  data_5_meta_phtCounter = _RAND_92[1:0];
+  _RAND_93 = {1{`RANDOM}};
+  data_5_meta_rasTop = _RAND_93[2:0];
+  _RAND_94 = {1{`RANDOM}};
+  data_5_meta_predTaken = _RAND_94[0:0];
+  _RAND_95 = {1{`RANDOM}};
+  data_5_meta_predTarget = _RAND_95[31:0];
+  _RAND_96 = {1{`RANDOM}};
+  data_6_pc = _RAND_96[31:0];
+  _RAND_97 = {1{`RANDOM}};
+  data_6_fallThrough = _RAND_97[31:0];
+  _RAND_98 = {1{`RANDOM}};
+  data_6_taken = _RAND_98[0:0];
+  _RAND_99 = {1{`RANDOM}};
+  data_6_target = _RAND_99[31:0];
+  _RAND_100 = {1{`RANDOM}};
+  data_6_takenOffset = _RAND_100[1:0];
+  _RAND_101 = {1{`RANDOM}};
+  data_6_meta_valid = _RAND_101[0:0];
+  _RAND_102 = {1{`RANDOM}};
+  data_6_meta_btbHit = _RAND_102[0:0];
+  _RAND_103 = {1{`RANDOM}};
+  data_6_meta_btbIsJalr = _RAND_103[0:0];
+  _RAND_104 = {1{`RANDOM}};
+  data_6_meta_btbIsJal = _RAND_104[0:0];
+  _RAND_105 = {1{`RANDOM}};
+  data_6_meta_btbIsCall = _RAND_105[0:0];
+  _RAND_106 = {1{`RANDOM}};
+  data_6_meta_btbIsRet = _RAND_106[0:0];
+  _RAND_107 = {1{`RANDOM}};
+  data_6_meta_btbOffset = _RAND_107[1:0];
+  _RAND_108 = {1{`RANDOM}};
+  data_6_meta_phtCounter = _RAND_108[1:0];
+  _RAND_109 = {1{`RANDOM}};
+  data_6_meta_rasTop = _RAND_109[2:0];
+  _RAND_110 = {1{`RANDOM}};
+  data_6_meta_predTaken = _RAND_110[0:0];
+  _RAND_111 = {1{`RANDOM}};
+  data_6_meta_predTarget = _RAND_111[31:0];
+  _RAND_112 = {1{`RANDOM}};
+  data_7_pc = _RAND_112[31:0];
+  _RAND_113 = {1{`RANDOM}};
+  data_7_fallThrough = _RAND_113[31:0];
+  _RAND_114 = {1{`RANDOM}};
+  data_7_taken = _RAND_114[0:0];
+  _RAND_115 = {1{`RANDOM}};
+  data_7_target = _RAND_115[31:0];
+  _RAND_116 = {1{`RANDOM}};
+  data_7_takenOffset = _RAND_116[1:0];
+  _RAND_117 = {1{`RANDOM}};
+  data_7_meta_valid = _RAND_117[0:0];
+  _RAND_118 = {1{`RANDOM}};
+  data_7_meta_btbHit = _RAND_118[0:0];
+  _RAND_119 = {1{`RANDOM}};
+  data_7_meta_btbIsJalr = _RAND_119[0:0];
+  _RAND_120 = {1{`RANDOM}};
+  data_7_meta_btbIsJal = _RAND_120[0:0];
+  _RAND_121 = {1{`RANDOM}};
+  data_7_meta_btbIsCall = _RAND_121[0:0];
+  _RAND_122 = {1{`RANDOM}};
+  data_7_meta_btbIsRet = _RAND_122[0:0];
+  _RAND_123 = {1{`RANDOM}};
+  data_7_meta_btbOffset = _RAND_123[1:0];
+  _RAND_124 = {1{`RANDOM}};
+  data_7_meta_phtCounter = _RAND_124[1:0];
+  _RAND_125 = {1{`RANDOM}};
+  data_7_meta_rasTop = _RAND_125[2:0];
+  _RAND_126 = {1{`RANDOM}};
+  data_7_meta_predTaken = _RAND_126[0:0];
+  _RAND_127 = {1{`RANDOM}};
+  data_7_meta_predTarget = _RAND_127[31:0];
+  _RAND_128 = {1{`RANDOM}};
+  head = _RAND_128[2:0];
+  _RAND_129 = {1{`RANDOM}};
+  tail = _RAND_129[2:0];
+  _RAND_130 = {1{`RANDOM}};
+  count = _RAND_130[3:0];
+`endif // RANDOMIZE_REG_INIT
+  `endif // RANDOMIZE
+end // initial
+`ifdef FIRRTL_AFTER_INITIAL
+`FIRRTL_AFTER_INITIAL
+`endif
+`endif // SYNTHESIS
+endmodule
