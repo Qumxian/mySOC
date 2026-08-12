@@ -1,0 +1,9 @@
+run_vivado/*.dmp
+run_vivado/*.log
+run_vivado/project
+run_vivado/*.jou
+rtl/IP/xilinx_ip/2023.2/mig_axi_32_loongson/mig_axi_32.veo
+rtl/IP/xilinx_ip/2023.2/mig_axi_32_loongson/mig_axi_32/
+rtl/IP/xilinx_ip/2023.2/mig_axi_32_loongson/mig_axi_32_xmdf.tcl
+rtl/IP/xilinx_ip/2023.2/mig_axi_32_loongson/xil_txt.in
+rtl/IP/xilinx_ip/2023.2/mig_axi_32_loongson/xil_txt.out
