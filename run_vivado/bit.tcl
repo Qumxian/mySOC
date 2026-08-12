@@ -1,5 +1,5 @@
 # bit.tcl
-open_project project/loongson.xpr
+open_project project/system_run.xpr
 launch_runs impl_1 -to_step write_bitstream
 wait_on_run impl_1  
 
