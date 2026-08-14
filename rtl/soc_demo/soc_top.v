@@ -118,7 +118,42 @@ module soc_top(
     output [7:0]  VGA_G,
     output [7:0]  VGA_B,
     output        VGA_HSYNC,
-    output        VGA_VSYNC
+    output        VGA_VSYNC,
+
+    //------USB3500 UTMI+------
+    input         FPGA_USB_PHY_CLK,
+    inout         FPGA_USB_PHY0_DATA0,
+    inout         FPGA_USB_PHY0_DATA1,
+    inout         FPGA_USB_PHY0_DATA2,
+    inout         FPGA_USB_PHY0_DATA3,
+    inout         FPGA_USB_PHY0_DATA4,
+    inout         FPGA_USB_PHY0_DATA5,
+    inout         FPGA_USB_PHY0_DATA6,
+    inout         FPGA_USB_PHY0_DATA7,
+    input         USB_TXREADY,
+    input         USB_RXVALID,
+    input         USB_RXACTIVE,
+    input         USB_RXERROR,
+    input         USB_LINESTATE0,
+    input         USB_LINESTATE1,
+    input         USB_VBUSVLD,
+    input         USB_SESSVLD,
+    input         USB_SESSEND,
+    input         USB_HOSTDISC,
+    input         USB_ID_DIG,
+    output        USB_TXVALID,
+    output        USB_XCVRSEL0,
+    output        USB_XCVRSEL1,
+    output        USB_TERMSEL,
+    output        USB_OPMODE0,
+    output        USB_OPMODE1,
+    output        USB_DPPD,
+    output        USB_DMPD,
+    output        USB_SUSPENDn,
+    output        FPGA_USB_PHY0_RST,
+    output        USB_ID_PULLUP,
+    output        USB_CHRGVBUS,
+    output        USB_DISCHRGVBUS
 );
 wire        aclk;
 wire        aresetn;
@@ -423,6 +458,82 @@ wire [15:0]  xbar_m_rresp;
 wire [7:0]   xbar_m_rlast;
 wire [7:0]   xbar_m_rvalid;
 wire [7:0]   xbar_m_rready;
+
+// M07 USB register path: AXI3 at aclk -> AXI3 at USB PHY clock -> AXI4-Lite.
+// Address space: 0x1FB20000 - 0x1FB2FFFF (core registers use offsets 0x00-0x24).
+wire        usb_clk;
+reg  [7:0]  usb_reset_release;
+wire        usb_aresetn;
+wire        usb_host_reset;
+
+wire [3:0]  usb_axi3_awid;
+wire [31:0] usb_axi3_awaddr;
+wire [3:0]  usb_axi3_awlen;
+wire [2:0]  usb_axi3_awsize;
+wire [1:0]  usb_axi3_awburst;
+wire [1:0]  usb_axi3_awlock;
+wire [3:0]  usb_axi3_awcache;
+wire [2:0]  usb_axi3_awprot;
+wire [3:0]  usb_axi3_awqos;
+wire        usb_axi3_awvalid;
+wire        usb_axi3_awready;
+wire [3:0]  usb_axi3_wid;
+wire [31:0] usb_axi3_wdata;
+wire [3:0]  usb_axi3_wstrb;
+wire        usb_axi3_wlast;
+wire        usb_axi3_wvalid;
+wire        usb_axi3_wready;
+wire [3:0]  usb_axi3_bid;
+wire [1:0]  usb_axi3_bresp;
+wire        usb_axi3_bvalid;
+wire        usb_axi3_bready;
+wire [3:0]  usb_axi3_arid;
+wire [31:0] usb_axi3_araddr;
+wire [3:0]  usb_axi3_arlen;
+wire [2:0]  usb_axi3_arsize;
+wire [1:0]  usb_axi3_arburst;
+wire [1:0]  usb_axi3_arlock;
+wire [3:0]  usb_axi3_arcache;
+wire [2:0]  usb_axi3_arprot;
+wire [3:0]  usb_axi3_arqos;
+wire        usb_axi3_arvalid;
+wire        usb_axi3_arready;
+wire [3:0]  usb_axi3_rid;
+wire [31:0] usb_axi3_rdata;
+wire [1:0]  usb_axi3_rresp;
+wire        usb_axi3_rlast;
+wire        usb_axi3_rvalid;
+wire        usb_axi3_rready;
+
+wire [31:0] usb_axil_awaddr;
+wire [2:0]  usb_axil_awprot;
+wire        usb_axil_awvalid;
+wire        usb_axil_awready;
+wire [31:0] usb_axil_wdata;
+wire [3:0]  usb_axil_wstrb;
+wire        usb_axil_wvalid;
+wire        usb_axil_wready;
+wire [1:0]  usb_axil_bresp;
+wire        usb_axil_bvalid;
+wire        usb_axil_bready;
+wire [31:0] usb_axil_araddr;
+wire [2:0]  usb_axil_arprot;
+wire        usb_axil_arvalid;
+wire        usb_axil_arready;
+wire [31:0] usb_axil_rdata;
+wire [1:0]  usb_axil_rresp;
+wire        usb_axil_rvalid;
+wire        usb_axil_rready;
+
+wire [7:0]  usb_utmi_data_in;
+wire [7:0]  usb_utmi_data_out;
+wire        usb_utmi_txvalid;
+wire [1:0]  usb_utmi_op_mode;
+wire [1:0]  usb_utmi_xcvrselect;
+wire        usb_utmi_termselect;
+wire        usb_utmi_dppulldown;
+wire        usb_utmi_dmpulldown;
+wire        usb_irq;
 
 // AXI4-Lite control interface between the protocol converters and VDMA/VTC.
 wire [31:0] vdma_axil_awaddr;
@@ -767,9 +878,10 @@ wire mac_int;
 wire [7:0] int_out;
 wire [7:0] int_n_i;
 wire [7:0] cpu_intrpt;
-assign int_out = {vdma_mm2s_introut,vtc_irq,1'b0,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
+reg  usb_irq_cpu_meta;
+reg  usb_irq_cpu_sync;
+assign int_out = {vdma_mm2s_introut,vtc_irq,usb_irq_cpu_sync,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
 assign int_n_i = ~int_out;
-// Bit 5 is reserved for USB.
 assign cpu_intrpt = int_out;
 
 reg cpu_aresetn_1;
@@ -788,6 +900,66 @@ always @(posedge cpu_clk or negedge aresetn) begin
 end
 
 assign cpu_aresetn = cpu_aresetn_2;
+
+// core_usb_host interrupt is a level signal in the 60 MHz USB clock domain.
+always @(posedge cpu_clk or negedge cpu_aresetn) begin
+    if (!cpu_aresetn) begin
+        usb_irq_cpu_meta <= 1'b0;
+        usb_irq_cpu_sync <= 1'b0;
+    end else begin
+        usb_irq_cpu_meta <= usb_irq;
+        usb_irq_cpu_sync <= usb_irq_cpu_meta;
+    end
+end
+
+// USB3500 supplies the 60 MHz UTMI clock.  Keep its active-high reset asserted
+// first, then release the AXI/core reset after another five PHY clock edges.
+BUFG USB_PHY_CLK_BUFG (
+    .I (FPGA_USB_PHY_CLK),
+    .O (usb_clk)
+);
+
+always @(posedge usb_clk or negedge aresetn) begin
+    if (!aresetn)
+        usb_reset_release <= 8'b0;
+    else
+        usb_reset_release <= {usb_reset_release[6:0], 1'b1};
+end
+
+assign FPGA_USB_PHY0_RST = ~usb_reset_release[2];
+assign usb_aresetn       =  usb_reset_release[7];
+assign usb_host_reset    = ~usb_aresetn;
+
+// USB3500 DATA[7:0] is a bidirectional UTMI bus; the link drives it only while
+// TXVALID is asserted.
+assign usb_utmi_data_in = {FPGA_USB_PHY0_DATA7, FPGA_USB_PHY0_DATA6,
+                           FPGA_USB_PHY0_DATA5, FPGA_USB_PHY0_DATA4,
+                           FPGA_USB_PHY0_DATA3, FPGA_USB_PHY0_DATA2,
+                           FPGA_USB_PHY0_DATA1, FPGA_USB_PHY0_DATA0};
+assign FPGA_USB_PHY0_DATA0 = usb_utmi_txvalid ? usb_utmi_data_out[0] : 1'bz;
+assign FPGA_USB_PHY0_DATA1 = usb_utmi_txvalid ? usb_utmi_data_out[1] : 1'bz;
+assign FPGA_USB_PHY0_DATA2 = usb_utmi_txvalid ? usb_utmi_data_out[2] : 1'bz;
+assign FPGA_USB_PHY0_DATA3 = usb_utmi_txvalid ? usb_utmi_data_out[3] : 1'bz;
+assign FPGA_USB_PHY0_DATA4 = usb_utmi_txvalid ? usb_utmi_data_out[4] : 1'bz;
+assign FPGA_USB_PHY0_DATA5 = usb_utmi_txvalid ? usb_utmi_data_out[5] : 1'bz;
+assign FPGA_USB_PHY0_DATA6 = usb_utmi_txvalid ? usb_utmi_data_out[6] : 1'bz;
+assign FPGA_USB_PHY0_DATA7 = usb_utmi_txvalid ? usb_utmi_data_out[7] : 1'bz;
+
+assign USB_TXVALID  = usb_utmi_txvalid;
+assign USB_XCVRSEL0 = usb_utmi_xcvrselect[0];
+assign USB_XCVRSEL1 = usb_utmi_xcvrselect[1];
+assign USB_TERMSEL  = usb_utmi_termselect;
+assign USB_OPMODE0  = usb_utmi_op_mode[0];
+assign USB_OPMODE1  = usb_utmi_op_mode[1];
+assign USB_DPPD     = usb_utmi_dppulldown;
+assign USB_DMPD     = usb_utmi_dmpulldown;
+assign USB_SUSPENDn = usb_aresetn;
+
+// Fixed-host board wiring: ID is already pulled low on the board and neither
+// VBUS charge circuit is needed during normal host operation.
+assign USB_ID_PULLUP   = 1'b0;
+assign USB_CHRGVBUS    = 1'b0;
+assign USB_DISCHRGVBUS = 1'b0;
 
 // 640x480@60 25MHz clk
 always @(posedge cpu_clk) begin
@@ -1477,20 +1649,6 @@ assign xbar_m_rlast[4:0]    = {mac_s_rlast,conf_s_rlast,apb_s_rlast,spi_s_rlast,
 assign xbar_m_rvalid[4:0]   = {mac_s_rvalid,conf_s_rvalid,apb_s_rvalid,spi_s_rvalid,s0_rvalid};
 assign {mac_s_rready,conf_s_rready,apb_s_rready,spi_s_rready,s0_rready} = xbar_m_rready[4:0];
 
-// M07 is reserved for the future USB AXI slave. No transaction is generated
-// for it by current software; response inputs are tied inactive until USB is added.
-assign xbar_m_awready[7]    = 1'b0;
-assign xbar_m_wready[7]     = 1'b0;
-assign xbar_m_bid[31:28]    = 4'b0;
-assign xbar_m_bresp[15:14]  = 2'b0;
-assign xbar_m_bvalid[7]     = 1'b0;
-assign xbar_m_arready[7]    = 1'b0;
-assign xbar_m_rid[31:28]    = 4'b0;
-assign xbar_m_rdata[255:224]= 32'b0;
-assign xbar_m_rresp[15:14]  = 2'b0;
-assign xbar_m_rlast[7]      = 1'b0;
-assign xbar_m_rvalid[7]     = 1'b0;
-
 axi_crossbar_0 AXI_CROSSBAR (
     .aclk          (aclk),
     .aresetn       (aresetn),
@@ -1696,6 +1854,193 @@ axi_protocol_converter_0 VTC_PROTOCOL_CONVERTER (
     .m_axi_rresp   (vtc_axil_rresp),
     .m_axi_rvalid  (vtc_axil_rvalid),
     .m_axi_rready  (vtc_axil_rready)
+);
+
+// M07 USB host registers: 0x1FB20000-0x1FB2FFFF.
+// The Crossbar runs at aclk; core_usb_host and USB3500 UTMI run together at
+// the PHY-supplied 60 MHz clock, so conversion is performed before AXI3-Lite.
+axi_clock_converter_0 USB_AXI_CLOCK_CONVERTER (
+    .s_axi_awid       (xbar_m_awid[7*4 +: 4]),
+    .s_axi_awaddr     (xbar_m_awaddr[7*32 +: 32]),
+    .s_axi_awlen      (xbar_m_awlen[7*4 +: 4]),
+    .s_axi_awsize     (xbar_m_awsize[7*3 +: 3]),
+    .s_axi_awburst    (xbar_m_awburst[7*2 +: 2]),
+    .s_axi_awlock     (xbar_m_awlock[7*2 +: 2]),
+    .s_axi_awcache    (xbar_m_awcache[7*4 +: 4]),
+    .s_axi_awprot     (xbar_m_awprot[7*3 +: 3]),
+    .s_axi_awqos      (xbar_m_awqos[7*4 +: 4]),
+    .s_axi_awvalid    (xbar_m_awvalid[7]),
+    .s_axi_awready    (xbar_m_awready[7]),
+    .s_axi_wid        (xbar_m_wid[7*4 +: 4]),
+    .s_axi_wdata      (xbar_m_wdata[7*32 +: 32]),
+    .s_axi_wstrb      (xbar_m_wstrb[7*4 +: 4]),
+    .s_axi_wlast      (xbar_m_wlast[7]),
+    .s_axi_wvalid     (xbar_m_wvalid[7]),
+    .s_axi_wready     (xbar_m_wready[7]),
+    .s_axi_bid        (xbar_m_bid[7*4 +: 4]),
+    .s_axi_bresp      (xbar_m_bresp[7*2 +: 2]),
+    .s_axi_bvalid     (xbar_m_bvalid[7]),
+    .s_axi_bready     (xbar_m_bready[7]),
+    .s_axi_arid       (xbar_m_arid[7*4 +: 4]),
+    .s_axi_araddr     (xbar_m_araddr[7*32 +: 32]),
+    .s_axi_arlen      (xbar_m_arlen[7*4 +: 4]),
+    .s_axi_arsize     (xbar_m_arsize[7*3 +: 3]),
+    .s_axi_arburst    (xbar_m_arburst[7*2 +: 2]),
+    .s_axi_arlock     (xbar_m_arlock[7*2 +: 2]),
+    .s_axi_arcache    (xbar_m_arcache[7*4 +: 4]),
+    .s_axi_arprot     (xbar_m_arprot[7*3 +: 3]),
+    .s_axi_arqos      (xbar_m_arqos[7*4 +: 4]),
+    .s_axi_arvalid    (xbar_m_arvalid[7]),
+    .s_axi_arready    (xbar_m_arready[7]),
+    .s_axi_rid        (xbar_m_rid[7*4 +: 4]),
+    .s_axi_rdata      (xbar_m_rdata[7*32 +: 32]),
+    .s_axi_rresp      (xbar_m_rresp[7*2 +: 2]),
+    .s_axi_rlast      (xbar_m_rlast[7]),
+    .s_axi_rvalid     (xbar_m_rvalid[7]),
+    .s_axi_rready     (xbar_m_rready[7]),
+    .s_axi_aclk       (aclk),
+    .s_axi_aresetn    (aresetn),
+
+    .m_axi_awid       (usb_axi3_awid),
+    .m_axi_awaddr     (usb_axi3_awaddr),
+    .m_axi_awlen      (usb_axi3_awlen),
+    .m_axi_awsize     (usb_axi3_awsize),
+    .m_axi_awburst    (usb_axi3_awburst),
+    .m_axi_awlock     (usb_axi3_awlock),
+    .m_axi_awcache    (usb_axi3_awcache),
+    .m_axi_awprot     (usb_axi3_awprot),
+    .m_axi_awqos      (usb_axi3_awqos),
+    .m_axi_awvalid    (usb_axi3_awvalid),
+    .m_axi_awready    (usb_axi3_awready),
+    .m_axi_wid        (usb_axi3_wid),
+    .m_axi_wdata      (usb_axi3_wdata),
+    .m_axi_wstrb      (usb_axi3_wstrb),
+    .m_axi_wlast      (usb_axi3_wlast),
+    .m_axi_wvalid     (usb_axi3_wvalid),
+    .m_axi_wready     (usb_axi3_wready),
+    .m_axi_bid        (usb_axi3_bid),
+    .m_axi_bresp      (usb_axi3_bresp),
+    .m_axi_bvalid     (usb_axi3_bvalid),
+    .m_axi_bready     (usb_axi3_bready),
+    .m_axi_arid       (usb_axi3_arid),
+    .m_axi_araddr     (usb_axi3_araddr),
+    .m_axi_arlen      (usb_axi3_arlen),
+    .m_axi_arsize     (usb_axi3_arsize),
+    .m_axi_arburst    (usb_axi3_arburst),
+    .m_axi_arlock     (usb_axi3_arlock),
+    .m_axi_arcache    (usb_axi3_arcache),
+    .m_axi_arprot     (usb_axi3_arprot),
+    .m_axi_arqos      (usb_axi3_arqos),
+    .m_axi_arvalid    (usb_axi3_arvalid),
+    .m_axi_arready    (usb_axi3_arready),
+    .m_axi_rid        (usb_axi3_rid),
+    .m_axi_rdata      (usb_axi3_rdata),
+    .m_axi_rresp      (usb_axi3_rresp),
+    .m_axi_rlast      (usb_axi3_rlast),
+    .m_axi_rvalid     (usb_axi3_rvalid),
+    .m_axi_rready     (usb_axi3_rready),
+    .m_axi_aclk       (usb_clk),
+    .m_axi_aresetn    (usb_aresetn)
+);
+
+axi_protocol_converter_0 USB_PROTOCOL_CONVERTER (
+    .aclk          (usb_clk),
+    .aresetn       (usb_aresetn),
+    .s_axi_awid    (usb_axi3_awid),
+    .s_axi_awaddr  (usb_axi3_awaddr),
+    .s_axi_awlen   (usb_axi3_awlen),
+    .s_axi_awsize  (usb_axi3_awsize),
+    .s_axi_awburst (usb_axi3_awburst),
+    .s_axi_awlock  (usb_axi3_awlock),
+    .s_axi_awcache (usb_axi3_awcache),
+    .s_axi_awprot  (usb_axi3_awprot),
+    .s_axi_awqos   (usb_axi3_awqos),
+    .s_axi_awvalid (usb_axi3_awvalid),
+    .s_axi_awready (usb_axi3_awready),
+    .s_axi_wid     (usb_axi3_wid),
+    .s_axi_wdata   (usb_axi3_wdata),
+    .s_axi_wstrb   (usb_axi3_wstrb),
+    .s_axi_wlast   (usb_axi3_wlast),
+    .s_axi_wvalid  (usb_axi3_wvalid),
+    .s_axi_wready  (usb_axi3_wready),
+    .s_axi_bid     (usb_axi3_bid),
+    .s_axi_bresp   (usb_axi3_bresp),
+    .s_axi_bvalid  (usb_axi3_bvalid),
+    .s_axi_bready  (usb_axi3_bready),
+    .s_axi_arid    (usb_axi3_arid),
+    .s_axi_araddr  (usb_axi3_araddr),
+    .s_axi_arlen   (usb_axi3_arlen),
+    .s_axi_arsize  (usb_axi3_arsize),
+    .s_axi_arburst (usb_axi3_arburst),
+    .s_axi_arlock  (usb_axi3_arlock),
+    .s_axi_arcache (usb_axi3_arcache),
+    .s_axi_arprot  (usb_axi3_arprot),
+    .s_axi_arqos   (usb_axi3_arqos),
+    .s_axi_arvalid (usb_axi3_arvalid),
+    .s_axi_arready (usb_axi3_arready),
+    .s_axi_rid     (usb_axi3_rid),
+    .s_axi_rdata   (usb_axi3_rdata),
+    .s_axi_rresp   (usb_axi3_rresp),
+    .s_axi_rlast   (usb_axi3_rlast),
+    .s_axi_rvalid  (usb_axi3_rvalid),
+    .s_axi_rready  (usb_axi3_rready),
+    .m_axi_awaddr  (usb_axil_awaddr),
+    .m_axi_awprot  (usb_axil_awprot),
+    .m_axi_awvalid (usb_axil_awvalid),
+    .m_axi_awready (usb_axil_awready),
+    .m_axi_wdata   (usb_axil_wdata),
+    .m_axi_wstrb   (usb_axil_wstrb),
+    .m_axi_wvalid  (usb_axil_wvalid),
+    .m_axi_wready  (usb_axil_wready),
+    .m_axi_bresp   (usb_axil_bresp),
+    .m_axi_bvalid  (usb_axil_bvalid),
+    .m_axi_bready  (usb_axil_bready),
+    .m_axi_araddr  (usb_axil_araddr),
+    .m_axi_arprot  (usb_axil_arprot),
+    .m_axi_arvalid (usb_axil_arvalid),
+    .m_axi_arready (usb_axil_arready),
+    .m_axi_rdata   (usb_axil_rdata),
+    .m_axi_rresp   (usb_axil_rresp),
+    .m_axi_rvalid  (usb_axil_rvalid),
+    .m_axi_rready  (usb_axil_rready)
+);
+
+usbh_host #(
+    .USB_CLK_FREQ (60000000)
+) USB_HOST (
+    .clk_i               (usb_clk),
+    .rst_i               (usb_host_reset),
+    .cfg_awvalid_i       (usb_axil_awvalid),
+    .cfg_awaddr_i        (usb_axil_awaddr),
+    .cfg_wvalid_i        (usb_axil_wvalid),
+    .cfg_wdata_i         (usb_axil_wdata),
+    .cfg_wstrb_i         (usb_axil_wstrb),
+    .cfg_bready_i        (usb_axil_bready),
+    .cfg_arvalid_i       (usb_axil_arvalid),
+    .cfg_araddr_i        (usb_axil_araddr),
+    .cfg_rready_i        (usb_axil_rready),
+    .cfg_awready_o       (usb_axil_awready),
+    .cfg_wready_o        (usb_axil_wready),
+    .cfg_bvalid_o        (usb_axil_bvalid),
+    .cfg_bresp_o         (usb_axil_bresp),
+    .cfg_arready_o       (usb_axil_arready),
+    .cfg_rvalid_o        (usb_axil_rvalid),
+    .cfg_rdata_o         (usb_axil_rdata),
+    .cfg_rresp_o         (usb_axil_rresp),
+    .intr_o              (usb_irq),
+    .utmi_data_in_i      (usb_utmi_data_in),
+    .utmi_txready_i      (USB_TXREADY),
+    .utmi_rxvalid_i      (USB_RXVALID),
+    .utmi_rxactive_i     (USB_RXACTIVE),
+    .utmi_rxerror_i      (USB_RXERROR),
+    .utmi_linestate_i    ({USB_LINESTATE1, USB_LINESTATE0}),
+    .utmi_data_out_o     (usb_utmi_data_out),
+    .utmi_txvalid_o      (usb_utmi_txvalid),
+    .utmi_op_mode_o      (usb_utmi_op_mode),
+    .utmi_xcvrselect_o   (usb_utmi_xcvrselect),
+    .utmi_termselect_o   (usb_utmi_termselect),
+    .utmi_dppulldown_o   (usb_utmi_dppulldown),
+    .utmi_dmpulldown_o   (usb_utmi_dmpulldown)
 );
 
 //SPI
