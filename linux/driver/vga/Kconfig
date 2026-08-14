@@ -1,0 +1,11 @@
+config FB_LOONGSON_MYSOC_VGA
+	tristate "Loongson mySOC AXI VDMA/VTC VGA framebuffer"
+	depends on FB && OF && HAS_IOMEM && HAS_DMA && COMMON_CLK
+	select OF_DISPLAY_TIMING
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	help
+	  Framebuffer driver for the project-specific pipeline made from
+	  axi_vdma_0, v_tc_0 and v_axi4s_vid_out_0.  It creates /dev/fb0 and
+	  drives the board's direct RGB444 resistor DAC.

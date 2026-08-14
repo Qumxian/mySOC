@@ -1,0 +1,6 @@
+menu "Loongson mySOC board drivers"
+
+source "drivers/mysoc/confreg/Kconfig"
+source "drivers/mysoc/vga/Kconfig"
+
+endmenu

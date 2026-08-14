@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+/ {
+	model = "loongson,generic";
+	compatible = "loongson,loongson3";
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	aliases {
+		serial0 = &cpu_uart0;
+		usb0 = &usb_host0;
+		display0 = &vga0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+		bootargs = "earlycon";
+	};
+
+	/* clk_pll_33/clk_out1 drives core_top and the VGA MM2S stream. */
+	cpu_clk: clock-50000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <50000000>;
+	};
+
+	/* clk_pll_33/clk_out2 drives aclk and all AXI control interfaces. */
+	bus_clk: clock-33000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <33000000>;
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+
+	cpuic: interrupt-controller {
+		compatible = "loongson,cpu-interrupt-controller";
+		interrupt-controller;
+		#interrupt-cells = <1>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x10000000 0x10000000 0x10000000>;
+		dma-ranges = <0x00000000 0x00000000 0x08000000>;
+		interrupt-parent = <&cpuic>;
+
+		/*
+		 * core_top intrpt[] is placed in ESTAT.IS[9:2]:
+		 * IRQ2 MAC, IRQ3 UART, IRQ4 SPI, IRQ5 NAND, IRQ6 APB DMA,
+		 * IRQ7 USB, IRQ8 reserved, IRQ9 axi_vdma_0 MM2S.
+		 */
+
+		/*
+		 * axi_crossbar_0 address map (AXI3, 32-bit address/data):
+		 * M00  0x00000000-0x07ffffff  DDR, described by memory@0
+		 * M01  0x1c000000-0x1c0fffff  SPI flash XIP
+		 * M01  0x1fe80000-0x1fe8ffff  spi_flash_ctrl registers
+		 * M02  0x1fe00000-0x1fe0ffff  APB_DEV (UART window)
+		 * M02  0x1fe70000-0x1fe7ffff  APB_DEV (NAND window)
+		 * M03  0x1fd00000-0x1fd0ffff  CONFREG
+		 * M04  0x1ff00000-0x1ff0ffff  ETHERNET_TOP
+		 * M05  0x1fb00000-0x1fb0ffff  VGA_VDMA
+		 * M06  0x1fb10000-0x1fb1ffff  VGA_VTC
+		 * M07  0x1fb20000-0x1fb2ffff  USB_HOST
+		 * M08  0x1fb40000-0x1fb4ffff  VGA_PIXEL_CLOCK
+		 *
+		 * M01/M02(NAND) use project-specific register layouts. They
+		 * need their matching out-of-tree drivers before active DT nodes
+		 * can be added; assigning unrelated upstream compatible strings
+		 * would make Linux bind the wrong driver.
+		 */
+
+		cpu_uart0: serial@1fe001e0 {
+			compatible = "ns16550a";
+			reg = <0x1fe001e0 0x10>;
+			clock-frequency = <33000000>;
+			interrupts = <3>;
+			reg-shift = <0>;
+			reg-io-width = <1>;
+			no-loopback-test;
+		};
+
+		confreg: system-controller@1fd00000 {
+			/* Exact RTL block name: confreg/CONFREG. */
+			compatible = "loongson,confreg", "syscon";
+			reg = <0x1fd00000 0x10000>;
+		};
+
+		gmac0: ethernet@1ff00000 {
+			compatible = "dmfe";
+			reg = <0x1ff00000 0x10000>;
+			interrupts = <2>;
+			interrupt-names = "macirq";
+			mac-address = [ 64 48 48 48 48 60 ];
+			local-mac-address = [ 64 48 48 48 48 60 ];
+			phy-mode = "mii";
+			bus_id = <0>;
+			phy_addr = <0xffffffff>;
+			dma-mask = <0xffffffff 0xffffffff>;
+		};
+
+		usb_host0: usb@1fb20000 {
+			/* Matches linux/driver/usb/ue11-hcd.c. */
+			compatible = "ue11-hcd";
+			reg = <0x1fb20000 0x10000>;
+			interrupts = <7>;
+			interrupt-names = "usb-host";
+			dr_mode = "host";
+		};
+
+		vga0: display-controller@1fb00000 {
+			/* Matches linux/driver/vga/loongson_vga.c. */
+			compatible = "loongson,mysoc-vga";
+			reg = <0x1fb00000 0x10000>,
+			      <0x1fb10000 0x10000>;
+			reg-names = "vdma", "vtc";
+			interrupt-parent = <&cpuic>;
+			/* axi_vdma_0/mm2s_introut directly drives CPU IRQ9. */
+			interrupts = <9>;
+			clocks = <&vga_pixel_clk 0>;
+			clock-names = "pixel";
+			display-timings {
+				native-mode = <&vga_640x480>;
+
+				vga_640x480: timing0 {
+					/* clk_wiz_vga actual output shown by Vivado. */
+					clock-frequency = <25164110>;
+					hactive = <640>;
+					vactive = <480>;
+					hfront-porch = <16>;
+					hsync-len = <96>;
+					hback-porch = <48>;
+					vfront-porch = <10>;
+					vsync-len = <2>;
+					vback-porch = <33>;
+					hsync-active = <0>;
+					vsync-active = <0>;
+					de-active = <1>;
+					pixelclk-active = <1>;
+				};
+			};
+		};
+
+		vga_pixel_clk: clock-controller@1fb40000 {
+			/* The generic fallback is required by the Linux 5.14 driver. */
+			compatible = "xlnx,clocking-wizard-v6.0",
+				     "xlnx,clocking-wizard";
+			reg = <0x1fb40000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&cpu_clk>, <&bus_clk>;
+			clock-names = "clk_in1", "s_axi_aclk";
+			clock-output-names = "vga_pixel_clk", "vga_clk_unused1",
+				     "vga_clk_unused2", "vga_clk_unused3",
+				     "vga_clk_unused4", "vga_clk_unused5",
+				     "vga_clk_unused6";
+			/* 5.14 uses speed-grade; newer bindings use xlnx,speed-grade. */
+			speed-grade = <2>;
+			xlnx,speed-grade = <2>;
+			xlnx,nr-outputs = <1>;
+		};
+
+		/*
+		 * v_axi4s_vid_out_0 and the external VGA resistor DAC have no MMIO;
+		 * vga0 represents the complete fixed streaming display pipeline.
+		 */
+	};
+};

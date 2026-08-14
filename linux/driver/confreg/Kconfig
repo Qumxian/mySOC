@@ -1,0 +1,7 @@
+config LOONGSON_CONFREG
+	tristate "Loongson mySOC CONFREG support"
+	depends on OF && HAS_IOMEM
+	help
+	  Expose the confreg register bank implemented by confreg_syn.v through
+	  /dev/confreg.  The device supports aligned pread/pwrite and ioctl access;
+	  writes require CAP_SYS_RAWIO.
