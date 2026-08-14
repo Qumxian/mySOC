@@ -114,39 +114,29 @@ module soc_top(
     inout         SPI_MOSI,
 
     //------VGA-------------
-    output [7:0]  VGA_R,
-    output [7:0]  VGA_G,
-    output [7:0]  VGA_B,
+    output [3:0]  FPGA_VGA_R,
+    output [3:0]  FPGA_VGA_G,
+    output [3:0]  FPGA_VGA_B,
     output        VGA_HSYNC,
     output        VGA_VSYNC,
 
     //------USB3500 UTMI+------
-    input         FPGA_USB_PHY_CLK,
-    inout         FPGA_USB_PHY0_DATA0,
-    inout         FPGA_USB_PHY0_DATA1,
-    inout         FPGA_USB_PHY0_DATA2,
-    inout         FPGA_USB_PHY0_DATA3,
-    inout         FPGA_USB_PHY0_DATA4,
-    inout         FPGA_USB_PHY0_DATA5,
-    inout         FPGA_USB_PHY0_DATA6,
-    inout         FPGA_USB_PHY0_DATA7,
+    input         FPGA_USB_PHY0_CLK,
+    inout  [7:0]  FPGA_USB_PHY0_DATA,
     input         USB_TXREADY,
     input         USB_RXVALID,
     input         USB_RXACTIVE,
     input         USB_RXERROR,
-    input         USB_LINESTATE0,
-    input         USB_LINESTATE1,
+    input  [1:0]  USB_LINESTATE,
     input         USB_VBUSVLD,
     input         USB_SESSVLD,
     input         USB_SESSEND,
     input         USB_HOSTDISC,
     input         USB_ID_DIG,
     output        USB_TXVALID,
-    output        USB_XCVRSEL0,
-    output        USB_XCVRSEL1,
+    output [1:0]  USB_XCVRSEL,
     output        USB_TERMSEL,
-    output        USB_OPMODE0,
-    output        USB_OPMODE1,
+    output [1:0]  USB_OPMODE,
     output        USB_DPPD,
     output        USB_DMPD,
     output        USB_SUSPENDn,
@@ -419,45 +409,45 @@ wire                      s0_rlast;
 wire                      s0_rvalid;
 wire                      s0_rready;
 
-// AXI Crossbar: one AXI3 slave interface to eight AXI3 master interfaces.
-wire [31:0]  xbar_m_awid;
-wire [255:0] xbar_m_awaddr;
-wire [31:0]  xbar_m_awlen;
-wire [23:0]  xbar_m_awsize;
-wire [15:0]  xbar_m_awburst;
-wire [15:0]  xbar_m_awlock;
-wire [31:0]  xbar_m_awcache;
-wire [23:0]  xbar_m_awprot;
-wire [31:0]  xbar_m_awqos;
-wire [7:0]   xbar_m_awvalid;
-wire [7:0]   xbar_m_awready;
-wire [31:0]  xbar_m_wid;
-wire [255:0] xbar_m_wdata;
-wire [31:0]  xbar_m_wstrb;
-wire [7:0]   xbar_m_wlast;
-wire [7:0]   xbar_m_wvalid;
-wire [7:0]   xbar_m_wready;
-wire [31:0]  xbar_m_bid;
-wire [15:0]  xbar_m_bresp;
-wire [7:0]   xbar_m_bvalid;
-wire [7:0]   xbar_m_bready;
-wire [31:0]  xbar_m_arid;
-wire [255:0] xbar_m_araddr;
-wire [31:0]  xbar_m_arlen;
-wire [23:0]  xbar_m_arsize;
-wire [15:0]  xbar_m_arburst;
-wire [15:0]  xbar_m_arlock;
-wire [31:0]  xbar_m_arcache;
-wire [23:0]  xbar_m_arprot;
-wire [31:0]  xbar_m_arqos;
-wire [7:0]   xbar_m_arvalid;
-wire [7:0]   xbar_m_arready;
-wire [31:0]  xbar_m_rid;
-wire [255:0] xbar_m_rdata;
-wire [15:0]  xbar_m_rresp;
-wire [7:0]   xbar_m_rlast;
-wire [7:0]   xbar_m_rvalid;
-wire [7:0]   xbar_m_rready;
+// AXI Crossbar: one CPU AXI3 input and nine AXI3 output interfaces.
+wire [35:0]  xbar_m_awid;
+wire [287:0] xbar_m_awaddr;
+wire [35:0]  xbar_m_awlen;
+wire [26:0]  xbar_m_awsize;
+wire [17:0]  xbar_m_awburst;
+wire [17:0]  xbar_m_awlock;
+wire [35:0]  xbar_m_awcache;
+wire [26:0]  xbar_m_awprot;
+wire [35:0]  xbar_m_awqos;
+wire [8:0]   xbar_m_awvalid;
+wire [8:0]   xbar_m_awready;
+wire [35:0]  xbar_m_wid;
+wire [287:0] xbar_m_wdata;
+wire [35:0]  xbar_m_wstrb;
+wire [8:0]   xbar_m_wlast;
+wire [8:0]   xbar_m_wvalid;
+wire [8:0]   xbar_m_wready;
+wire [35:0]  xbar_m_bid;
+wire [17:0]  xbar_m_bresp;
+wire [8:0]   xbar_m_bvalid;
+wire [8:0]   xbar_m_bready;
+wire [35:0]  xbar_m_arid;
+wire [287:0] xbar_m_araddr;
+wire [35:0]  xbar_m_arlen;
+wire [26:0]  xbar_m_arsize;
+wire [17:0]  xbar_m_arburst;
+wire [17:0]  xbar_m_arlock;
+wire [35:0]  xbar_m_arcache;
+wire [26:0]  xbar_m_arprot;
+wire [35:0]  xbar_m_arqos;
+wire [8:0]   xbar_m_arvalid;
+wire [8:0]   xbar_m_arready;
+wire [35:0]  xbar_m_rid;
+wire [287:0] xbar_m_rdata;
+wire [17:0]  xbar_m_rresp;
+wire [8:0]   xbar_m_rlast;
+wire [8:0]   xbar_m_rvalid;
+wire [8:0]   xbar_m_rready;
 
 // M07 USB register path: AXI3 at aclk -> AXI3 at USB PHY clock -> AXI4-Lite.
 // Address space: 0x1FB20000 - 0x1FB2FFFF (core registers use offsets 0x00-0x24).
@@ -576,6 +566,27 @@ wire [1:0]  vtc_axil_rresp;
 wire        vtc_axil_rvalid;
 wire        vtc_axil_rready;
 
+// M08 AXI4-Lite register interface: programmable VGA pixel clock.
+wire [31:0] vga_clk_axil_awaddr;
+wire [2:0]  vga_clk_axil_awprot;
+wire        vga_clk_axil_awvalid;
+wire        vga_clk_axil_awready;
+wire [31:0] vga_clk_axil_wdata;
+wire [3:0]  vga_clk_axil_wstrb;
+wire        vga_clk_axil_wvalid;
+wire        vga_clk_axil_wready;
+wire [1:0]  vga_clk_axil_bresp;
+wire        vga_clk_axil_bvalid;
+wire        vga_clk_axil_bready;
+wire [31:0] vga_clk_axil_araddr;
+wire [2:0]  vga_clk_axil_arprot;
+wire        vga_clk_axil_arvalid;
+wire        vga_clk_axil_arready;
+wire [31:0] vga_clk_axil_rdata;
+wire [1:0]  vga_clk_axil_rresp;
+wire        vga_clk_axil_rvalid;
+wire        vga_clk_axil_rready;
+
 // VDMA MM2S memory and AXI4-Stream video interfaces.
 wire [31:0] vdma_mm2s_araddr;
 wire [7:0]  vdma_mm2s_arlen;
@@ -605,13 +616,12 @@ wire        vtc_hblank;
 wire        vtc_vsync;
 wire        vtc_vblank;
 wire        vtc_active_video;
-wire        vtc_irq;
 wire [0:0]  vtc_fsync;
 wire        video_vtg_ce;
 wire        video_locked;
 wire        video_overflow;
 wire        video_underflow;
-wire [10:0] video_fifo_read_level;
+wire [11:0] video_fifo_read_level;
 wire [31:0] video_status;
 wire        video_sof_state;
 wire        video_active;
@@ -621,44 +631,11 @@ wire        video_vblank;
 wire        video_hblank;
 wire        video_field_id;
 wire [23:0] video_data;
-reg         video_pixel_ce;
-
-// Output of the reused 2x1 AXI interconnect that arbitrates CPU and VDMA DDR reads.
-wire [4:0]  vga_ddr_awid;
-wire [31:0] vga_ddr_awaddr;
-wire [3:0]  vga_ddr_awlen;
-wire [2:0]  vga_ddr_awsize;
-wire [1:0]  vga_ddr_awburst;
-wire [1:0]  vga_ddr_awlock;
-wire [3:0]  vga_ddr_awcache;
-wire [2:0]  vga_ddr_awprot;
-wire        vga_ddr_awvalid;
-wire        vga_ddr_awready;
-wire [31:0] vga_ddr_wdata;
-wire [3:0]  vga_ddr_wstrb;
-wire        vga_ddr_wlast;
-wire        vga_ddr_wvalid;
-wire        vga_ddr_wready;
-wire [3:0]  vga_ddr_bid;
-wire [1:0]  vga_ddr_bresp;
-wire        vga_ddr_bvalid;
-wire        vga_ddr_bready;
-wire [4:0]  vga_ddr_arid;
-wire [31:0] vga_ddr_araddr;
-wire [3:0]  vga_ddr_arlen;
-wire [2:0]  vga_ddr_arsize;
-wire [1:0]  vga_ddr_arburst;
-wire [1:0]  vga_ddr_arlock;
-wire [3:0]  vga_ddr_arcache;
-wire [2:0]  vga_ddr_arprot;
-wire        vga_ddr_arvalid;
-wire        vga_ddr_arready;
-wire [3:0]  vga_ddr_rid;
-wire [31:0] vga_ddr_rdata;
-wire [1:0]  vga_ddr_rresp;
-wire        vga_ddr_rlast;
-wire        vga_ddr_rvalid;
-wire        vga_ddr_rready;
+wire        vga_pixel_clk;
+wire        vga_clk_locked;
+reg  [1:0]  vga_pixel_reset_sync;
+wire        vga_pixel_reset_asyncn;
+wire        vga_pixel_aresetn;
 
 wire [8            -1 :0] mig_awid;
 wire [`Lawaddr     -1 :0] mig_awaddr;
@@ -880,7 +857,9 @@ wire [7:0] int_n_i;
 wire [7:0] cpu_intrpt;
 reg  usb_irq_cpu_meta;
 reg  usb_irq_cpu_sync;
-assign int_out = {vdma_mm2s_introut,vtc_irq,usb_irq_cpu_sync,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
+reg  vdma_irq_cpu_meta;
+reg  vdma_irq_cpu_sync;
+assign int_out = {vdma_irq_cpu_sync,1'b0,usb_irq_cpu_sync,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
 assign int_n_i = ~int_out;
 assign cpu_intrpt = int_out;
 
@@ -912,10 +891,22 @@ always @(posedge cpu_clk or negedge cpu_aresetn) begin
     end
 end
 
+// Synchronize the active-high VDMA level interrupt from aclk into the CPU
+// clock domain before driving cpu_intrpt[7].
+always @(posedge cpu_clk or negedge cpu_aresetn) begin
+    if (!cpu_aresetn) begin
+        vdma_irq_cpu_meta <= 1'b0;
+        vdma_irq_cpu_sync <= 1'b0;
+    end else begin
+        vdma_irq_cpu_meta <= vdma_mm2s_introut;
+        vdma_irq_cpu_sync <= vdma_irq_cpu_meta;
+    end
+end
+
 // USB3500 supplies the 60 MHz UTMI clock.  Keep its active-high reset asserted
 // first, then release the AXI/core reset after another five PHY clock edges.
 BUFG USB_PHY_CLK_BUFG (
-    .I (FPGA_USB_PHY_CLK),
+    .I (FPGA_USB_PHY0_CLK),
     .O (usb_clk)
 );
 
@@ -932,25 +923,13 @@ assign usb_host_reset    = ~usb_aresetn;
 
 // USB3500 DATA[7:0] is a bidirectional UTMI bus; the link drives it only while
 // TXVALID is asserted.
-assign usb_utmi_data_in = {FPGA_USB_PHY0_DATA7, FPGA_USB_PHY0_DATA6,
-                           FPGA_USB_PHY0_DATA5, FPGA_USB_PHY0_DATA4,
-                           FPGA_USB_PHY0_DATA3, FPGA_USB_PHY0_DATA2,
-                           FPGA_USB_PHY0_DATA1, FPGA_USB_PHY0_DATA0};
-assign FPGA_USB_PHY0_DATA0 = usb_utmi_txvalid ? usb_utmi_data_out[0] : 1'bz;
-assign FPGA_USB_PHY0_DATA1 = usb_utmi_txvalid ? usb_utmi_data_out[1] : 1'bz;
-assign FPGA_USB_PHY0_DATA2 = usb_utmi_txvalid ? usb_utmi_data_out[2] : 1'bz;
-assign FPGA_USB_PHY0_DATA3 = usb_utmi_txvalid ? usb_utmi_data_out[3] : 1'bz;
-assign FPGA_USB_PHY0_DATA4 = usb_utmi_txvalid ? usb_utmi_data_out[4] : 1'bz;
-assign FPGA_USB_PHY0_DATA5 = usb_utmi_txvalid ? usb_utmi_data_out[5] : 1'bz;
-assign FPGA_USB_PHY0_DATA6 = usb_utmi_txvalid ? usb_utmi_data_out[6] : 1'bz;
-assign FPGA_USB_PHY0_DATA7 = usb_utmi_txvalid ? usb_utmi_data_out[7] : 1'bz;
+assign usb_utmi_data_in    = FPGA_USB_PHY0_DATA;
+assign FPGA_USB_PHY0_DATA  = usb_utmi_txvalid ? usb_utmi_data_out : 8'bz;
 
 assign USB_TXVALID  = usb_utmi_txvalid;
-assign USB_XCVRSEL0 = usb_utmi_xcvrselect[0];
-assign USB_XCVRSEL1 = usb_utmi_xcvrselect[1];
+assign USB_XCVRSEL  = usb_utmi_xcvrselect;
 assign USB_TERMSEL  = usb_utmi_termselect;
-assign USB_OPMODE0  = usb_utmi_op_mode[0];
-assign USB_OPMODE1  = usb_utmi_op_mode[1];
+assign USB_OPMODE   = usb_utmi_op_mode;
 assign USB_DPPD     = usb_utmi_dppulldown;
 assign USB_DMPD     = usb_utmi_dmpulldown;
 assign USB_SUSPENDn = usb_aresetn;
@@ -961,18 +940,28 @@ assign USB_ID_PULLUP   = 1'b0;
 assign USB_CHRGVBUS    = 1'b0;
 assign USB_DISCHRGVBUS = 1'b0;
 
-// 640x480@60 25MHz clk
-always @(posedge cpu_clk) begin
-    if (!cpu_aresetn)
-        video_pixel_ce <= 1'b0;
+// Assert reset asynchronously when the clock loses lock, then release it
+// synchronously after two valid pixel-clock edges.
+assign vga_pixel_reset_asyncn = cpu_aresetn & vga_clk_locked;
+
+always @(posedge vga_pixel_clk or negedge vga_pixel_reset_asyncn) begin
+    if (!vga_pixel_reset_asyncn)
+        vga_pixel_reset_sync <= 2'b00;
     else
-        video_pixel_ce <= ~video_pixel_ce;
+        vga_pixel_reset_sync <= {vga_pixel_reset_sync[0],1'b1};
 end
 
-// AXI4-Stream RGB component order is {R,B,G} for the configured video format.
-assign VGA_R     = video_active ? video_data[23:16] : 8'b0;
-assign VGA_G     = video_active ? video_data[7:0]   : 8'b0;
-assign VGA_B     = video_active ? video_data[15:8]  : 8'b0;
+assign vga_pixel_aresetn = vga_pixel_reset_sync[1];
+
+// AXI4-Stream component order is {R,B,G}.  The board provides three direct
+// 4-bit resistor DACs; bit 3 is the MSB (499 ohm) and bit 0 is the LSB
+// (4.02 kohm).
+assign FPGA_VGA_R = video_active ? video_data[23:20] : 4'h0;
+assign FPGA_VGA_G = video_active ? video_data[7:4]   : 4'h0;
+assign FPGA_VGA_B = video_active ? video_data[15:12] : 4'h0;
+
+// v_tc_0 is configured for active-low 640x480 HSYNC/VSYNC.  The schematic
+// connects both syncs to the VGA connector through 100-ohm series resistors.
 assign VGA_HSYNC = video_hsync;
 assign VGA_VSYNC = video_vsync;
 
@@ -1598,14 +1587,16 @@ axi_slave_mux AXI_SLAVE_MUX
 */
 
 // AXI address space (configured in axi_crossbar_0):
-// M00  DDR      0x00000000-0x07FFFFFF
+// M00  DDR      0x00000000-0x07FFFFFF (Addr Width 27, Read/Write Issuing 4)
 // M01  SPI      0x1C000000-0x1C0FFFFF, 0x1FE80000-0x1FE8FFFF
 // M02  APB_DEV  0x1FE00000-0x1FE0FFFF, 0x1FE70000-0x1FE7FFFF
 // M03  CONFREG  0x1FD00000-0x1FD0FFFF
 // M04  MAC      0x1FF00000-0x1FF0FFFF
 // M05  VDMA     0x1FB00000-0x1FB0FFFF
 // M06  VTC      0x1FB10000-0x1FB1FFFF
-// M07  USB      0x1FB20000-0x1FB2FFFF (reserved; no slave connected yet)
+// M07  USB      0x1FB20000-0x1FB2FFFF
+// M08  VGA_CLK  0x1FB40000-0x1FB4FFFF
+// M01-M08 are register/control targets and use Read/Write Issuing 1.
 
 // Crossbar outputs M00-M04 retain the original SoC signal names.
 assign {mac_s_awid,    conf_s_awid,    apb_s_awid,    spi_s_awid,    s0_awid}    = xbar_m_awid[19:0];
@@ -2033,7 +2024,7 @@ usbh_host #(
     .utmi_rxvalid_i      (USB_RXVALID),
     .utmi_rxactive_i     (USB_RXACTIVE),
     .utmi_rxerror_i      (USB_RXERROR),
-    .utmi_linestate_i    ({USB_LINESTATE1, USB_LINESTATE0}),
+    .utmi_linestate_i    (USB_LINESTATE),
     .utmi_data_out_o     (usb_utmi_data_out),
     .utmi_txvalid_o      (usb_utmi_txvalid),
     .utmi_op_mode_o      (usb_utmi_op_mode),
@@ -2271,6 +2262,95 @@ ethernet_top ETHERNET_TOP(
 
 );
 
+// M08: AXI3 control transactions to clk_wiz_vga dynamic reconfiguration.
+axi_protocol_converter_0 VGA_CLK_PROTOCOL_CONVERTER (
+    .aclk          (aclk),
+    .aresetn       (aresetn),
+    .s_axi_awid    (xbar_m_awid[8*4 +: 4]),
+    .s_axi_awaddr  (xbar_m_awaddr[8*32 +: 32]),
+    .s_axi_awlen   (xbar_m_awlen[8*4 +: 4]),
+    .s_axi_awsize  (xbar_m_awsize[8*3 +: 3]),
+    .s_axi_awburst (xbar_m_awburst[8*2 +: 2]),
+    .s_axi_awlock  (xbar_m_awlock[8*2 +: 2]),
+    .s_axi_awcache (xbar_m_awcache[8*4 +: 4]),
+    .s_axi_awprot  (xbar_m_awprot[8*3 +: 3]),
+    .s_axi_awqos   (xbar_m_awqos[8*4 +: 4]),
+    .s_axi_awvalid (xbar_m_awvalid[8]),
+    .s_axi_awready (xbar_m_awready[8]),
+    .s_axi_wid     (xbar_m_wid[8*4 +: 4]),
+    .s_axi_wdata   (xbar_m_wdata[8*32 +: 32]),
+    .s_axi_wstrb   (xbar_m_wstrb[8*4 +: 4]),
+    .s_axi_wlast   (xbar_m_wlast[8]),
+    .s_axi_wvalid  (xbar_m_wvalid[8]),
+    .s_axi_wready  (xbar_m_wready[8]),
+    .s_axi_bid     (xbar_m_bid[8*4 +: 4]),
+    .s_axi_bresp   (xbar_m_bresp[8*2 +: 2]),
+    .s_axi_bvalid  (xbar_m_bvalid[8]),
+    .s_axi_bready  (xbar_m_bready[8]),
+    .s_axi_arid    (xbar_m_arid[8*4 +: 4]),
+    .s_axi_araddr  (xbar_m_araddr[8*32 +: 32]),
+    .s_axi_arlen   (xbar_m_arlen[8*4 +: 4]),
+    .s_axi_arsize  (xbar_m_arsize[8*3 +: 3]),
+    .s_axi_arburst (xbar_m_arburst[8*2 +: 2]),
+    .s_axi_arlock  (xbar_m_arlock[8*2 +: 2]),
+    .s_axi_arcache (xbar_m_arcache[8*4 +: 4]),
+    .s_axi_arprot  (xbar_m_arprot[8*3 +: 3]),
+    .s_axi_arqos   (xbar_m_arqos[8*4 +: 4]),
+    .s_axi_arvalid (xbar_m_arvalid[8]),
+    .s_axi_arready (xbar_m_arready[8]),
+    .s_axi_rid     (xbar_m_rid[8*4 +: 4]),
+    .s_axi_rdata   (xbar_m_rdata[8*32 +: 32]),
+    .s_axi_rresp   (xbar_m_rresp[8*2 +: 2]),
+    .s_axi_rlast   (xbar_m_rlast[8]),
+    .s_axi_rvalid  (xbar_m_rvalid[8]),
+    .s_axi_rready  (xbar_m_rready[8]),
+    .m_axi_awaddr  (vga_clk_axil_awaddr),
+    .m_axi_awprot  (vga_clk_axil_awprot),
+    .m_axi_awvalid (vga_clk_axil_awvalid),
+    .m_axi_awready (vga_clk_axil_awready),
+    .m_axi_wdata   (vga_clk_axil_wdata),
+    .m_axi_wstrb   (vga_clk_axil_wstrb),
+    .m_axi_wvalid  (vga_clk_axil_wvalid),
+    .m_axi_wready  (vga_clk_axil_wready),
+    .m_axi_bresp   (vga_clk_axil_bresp),
+    .m_axi_bvalid  (vga_clk_axil_bvalid),
+    .m_axi_bready  (vga_clk_axil_bready),
+    .m_axi_araddr  (vga_clk_axil_araddr),
+    .m_axi_arprot  (vga_clk_axil_arprot),
+    .m_axi_arvalid (vga_clk_axil_arvalid),
+    .m_axi_arready (vga_clk_axil_arready),
+    .m_axi_rdata   (vga_clk_axil_rdata),
+    .m_axi_rresp   (vga_clk_axil_rresp),
+    .m_axi_rvalid  (vga_clk_axil_rvalid),
+    .m_axi_rready  (vga_clk_axil_rready)
+);
+
+// Programmable VGA pixel clock registers: 0x1FB40000-0x1FB4FFFF.
+clk_wiz_vga VGA_PIXEL_CLOCK (
+    .s_axi_aclk       (aclk),
+    .s_axi_aresetn    (aresetn),
+    .s_axi_awaddr     (vga_clk_axil_awaddr[10:0]),
+    .s_axi_awvalid    (vga_clk_axil_awvalid),
+    .s_axi_awready    (vga_clk_axil_awready),
+    .s_axi_wdata      (vga_clk_axil_wdata),
+    .s_axi_wstrb      (vga_clk_axil_wstrb),
+    .s_axi_wvalid     (vga_clk_axil_wvalid),
+    .s_axi_wready     (vga_clk_axil_wready),
+    .s_axi_bresp      (vga_clk_axil_bresp),
+    .s_axi_bvalid     (vga_clk_axil_bvalid),
+    .s_axi_bready     (vga_clk_axil_bready),
+    .s_axi_araddr     (vga_clk_axil_araddr[10:0]),
+    .s_axi_arvalid    (vga_clk_axil_arvalid),
+    .s_axi_arready    (vga_clk_axil_arready),
+    .s_axi_rdata      (vga_clk_axil_rdata),
+    .s_axi_rresp      (vga_clk_axil_rresp),
+    .s_axi_rvalid     (vga_clk_axil_rvalid),
+    .s_axi_rready     (vga_clk_axil_rready),
+    .vga_pixel_clk    (vga_pixel_clk),
+    .vga_clk_locked   (vga_clk_locked),
+    .clk_in1          (cpu_clk)
+);
+
 // VGA VDMA control registers: 0x1FB00000-0x1FB0FFFF.
 axi_vdma_0 VGA_VDMA (
     .s_axi_lite_aclk       (aclk),
@@ -2319,18 +2399,18 @@ axi_vdma_0 VGA_VDMA (
 
 // VGA timing controller registers: 0x1FB10000-0x1FB1FFFF.
 v_tc_0 VGA_VTC (
-    .clk              (cpu_clk),
-    .clken            (video_pixel_ce),
+    .clk              (vga_pixel_clk),
+    .clken            (1'b1),
     .s_axi_aclk       (aclk),
     .s_axi_aclken     (1'b1),
-    .gen_clken        (video_pixel_ce & video_vtg_ce),
+    .gen_clken        (video_vtg_ce),
     .sof_state        (video_sof_state),
     .hsync_out        (vtc_hsync),
     .hblank_out       (vtc_hblank),
     .vsync_out        (vtc_vsync),
     .vblank_out       (vtc_vblank),
     .active_video_out (vtc_active_video),
-    .resetn           (cpu_aresetn),
+    .resetn           (vga_pixel_aresetn),
     .s_axi_aresetn    (aresetn),
     .s_axi_awaddr     (vtc_axil_awaddr[8:0]),
     .s_axi_awvalid    (vtc_axil_awvalid),
@@ -2349,7 +2429,7 @@ v_tc_0 VGA_VTC (
     .s_axi_rresp      (vtc_axil_rresp),
     .s_axi_rvalid     (vtc_axil_rvalid),
     .s_axi_rready     (vtc_axil_rready),
-    .irq              (vtc_irq),
+    .irq              (),
     .fsync_in         (1'b0),
     .fsync_out        (vtc_fsync)
 );
@@ -2364,7 +2444,9 @@ v_axi4s_vid_out_0 VGA_VIDEO_OUT (
     .s_axis_video_tuser  (vdma_axis_tuser),
     .s_axis_video_tlast  (vdma_axis_tlast),
     .fid                 (1'b0),
-    .vid_io_out_ce       (video_pixel_ce),
+    .vid_io_out_clk      (vga_pixel_clk),
+    .vid_io_out_reset    (~vga_pixel_aresetn),
+    .vid_io_out_ce       (1'b1),
     .vid_active_video    (video_active),
     .vid_vsync           (video_vsync),
     .vid_hsync           (video_hsync),

@@ -10,7 +10,7 @@ rtl/IP/xilinx_ip/**/xil_txt.out
 
 .Xil/
 **/.Xil/
-
+log/**/*
 *.jou
 *.log
 *.str
