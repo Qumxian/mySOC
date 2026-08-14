@@ -203,3 +203,91 @@ set_false_path -from [get_clocks clk_out2_clk_pll_33] -to [get_clocks mrxclk_0]
 set_false_path -from [get_clocks clk_out2_clk_pll_33] -to [get_clocks mrxclk_0]
 set_false_path -from [get_clocks clk_out2_clk_pll_33] -to [get_clocks mtxclk_0]
 set_false_path -from [get_clocks clk_out2_clk_pll_33] -to [get_clocks mtxclk_0]
+
+# VGA direct RGB444 resistor DAC.  The schematic names R0/G0/B0 as the LSB
+# (4.02 kohm) and R3/G3/B3 as the MSB (499 ohm).
+set_property PACKAGE_PIN T3 [get_ports {FPGA_VGA_R[0]}]
+set_property PACKAGE_PIN T2 [get_ports {FPGA_VGA_R[1]}]
+set_property PACKAGE_PIN U2 [get_ports {FPGA_VGA_R[2]}]
+set_property PACKAGE_PIN U4 [get_ports {FPGA_VGA_R[3]}]
+
+set_property PACKAGE_PIN R2 [get_ports {FPGA_VGA_G[0]}]
+set_property PACKAGE_PIN R1 [get_ports {FPGA_VGA_G[1]}]
+set_property PACKAGE_PIN U1 [get_ports {FPGA_VGA_G[2]}]
+set_property PACKAGE_PIN R5 [get_ports {FPGA_VGA_G[3]}]
+
+set_property PACKAGE_PIN P5 [get_ports {FPGA_VGA_B[0]}]
+set_property PACKAGE_PIN N1 [get_ports {FPGA_VGA_B[1]}]
+set_property PACKAGE_PIN P1 [get_ports {FPGA_VGA_B[2]}]
+set_property PACKAGE_PIN P3 [get_ports {FPGA_VGA_B[3]}]
+
+set_property PACKAGE_PIN U5 [get_ports VGA_HSYNC]
+set_property PACKAGE_PIN U6 [get_ports VGA_VSYNC]
+
+set_property IOSTANDARD LVCMOS33 [get_ports {FPGA_VGA_R[*] FPGA_VGA_G[*] FPGA_VGA_B[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {VGA_HSYNC VGA_VSYNC}]
+set_property DRIVE 8 [get_ports {FPGA_VGA_R[*] FPGA_VGA_G[*] FPGA_VGA_B[*]}]
+set_property DRIVE 8 [get_ports {VGA_HSYNC VGA_VSYNC}]
+set_property SLEW SLOW [get_ports {FPGA_VGA_R[*] FPGA_VGA_G[*] FPGA_VGA_B[*]}]
+set_property SLEW SLOW [get_ports {VGA_HSYNC VGA_VSYNC}]
+
+# USB3500 8-bit UTMI+ interface
+set_property PACKAGE_PIN AA20 [get_ports FPGA_USB_PHY0_CLK]
+set_property PACKAGE_PIN AD21 [get_ports USB_TXREADY]
+set_property PACKAGE_PIN AF22 [get_ports USB_RXVALID]
+set_property PACKAGE_PIN AB5  [get_ports USB_RXACTIVE]
+set_property PACKAGE_PIN AB2  [get_ports USB_RXERROR]
+set_property PACKAGE_PIN AA5  [get_ports {USB_LINESTATE[0]}]
+set_property PACKAGE_PIN AE5  [get_ports {USB_LINESTATE[1]}]
+set_property PACKAGE_PIN AB1  [get_ports USB_VBUSVLD]
+set_property PACKAGE_PIN AA2  [get_ports USB_SESSVLD]
+set_property PACKAGE_PIN AF2  [get_ports USB_SESSEND]
+set_property PACKAGE_PIN AD4  [get_ports USB_HOSTDISC]
+set_property PACKAGE_PIN W4   [get_ports USB_ID_DIG]
+
+set_property PACKAGE_PIN AA3 [get_ports {FPGA_USB_PHY0_DATA[0]}]
+set_property PACKAGE_PIN AC3 [get_ports {FPGA_USB_PHY0_DATA[1]}]
+set_property PACKAGE_PIN AE1 [get_ports {FPGA_USB_PHY0_DATA[2]}]
+set_property PACKAGE_PIN AB4 [get_ports {FPGA_USB_PHY0_DATA[3]}]
+set_property PACKAGE_PIN AD3 [get_ports {FPGA_USB_PHY0_DATA[4]}]
+set_property PACKAGE_PIN AA4 [get_ports {FPGA_USB_PHY0_DATA[5]}]
+set_property PACKAGE_PIN AC4 [get_ports {FPGA_USB_PHY0_DATA[6]}]
+set_property PACKAGE_PIN AE2 [get_ports {FPGA_USB_PHY0_DATA[7]}]
+
+set_property PACKAGE_PIN AF23 [get_ports USB_TXVALID]
+set_property PACKAGE_PIN AD20 [get_ports {USB_XCVRSEL[0]}]
+set_property PACKAGE_PIN AF4  [get_ports {USB_XCVRSEL[1]}]
+set_property PACKAGE_PIN AE21 [get_ports USB_TERMSEL]
+set_property PACKAGE_PIN AC6  [get_ports {USB_OPMODE[0]}]
+set_property PACKAGE_PIN AF5  [get_ports {USB_OPMODE[1]}]
+set_property PACKAGE_PIN AC2  [get_ports USB_DPPD]
+set_property PACKAGE_PIN AC1  [get_ports USB_DMPD]
+set_property PACKAGE_PIN AE20 [get_ports USB_SUSPENDn]
+set_property PACKAGE_PIN AD23 [get_ports FPGA_USB_PHY0_RST]
+set_property PACKAGE_PIN AD5  [get_ports USB_ID_PULLUP]
+set_property PACKAGE_PIN AF3  [get_ports USB_CHRGVBUS]
+set_property PACKAGE_PIN AE3  [get_ports USB_DISCHRGVBUS]
+
+set_property IOSTANDARD LVCMOS33 [get_ports {
+    FPGA_USB_PHY0_CLK USB_TXREADY USB_RXVALID USB_RXACTIVE USB_RXERROR
+    USB_LINESTATE[*] USB_VBUSVLD USB_SESSVLD USB_SESSEND USB_HOSTDISC
+    USB_ID_DIG FPGA_USB_PHY0_DATA[*] USB_TXVALID USB_XCVRSEL[*]
+    USB_TERMSEL USB_OPMODE[*] USB_DPPD USB_DMPD USB_SUSPENDn FPGA_USB_PHY0_RST
+    USB_ID_PULLUP USB_CHRGVBUS USB_DISCHRGVBUS
+}]
+
+set_property DRIVE 8 [get_ports {
+    FPGA_USB_PHY0_DATA[*] USB_TXVALID USB_XCVRSEL[*] USB_TERMSEL
+    USB_OPMODE[*] USB_DPPD USB_DMPD
+    USB_SUSPENDn FPGA_USB_PHY0_RST USB_ID_PULLUP USB_CHRGVBUS
+    USB_DISCHRGVBUS
+}]
+set_property SLEW FAST [get_ports {
+    FPGA_USB_PHY0_DATA[*] USB_TXVALID USB_XCVRSEL[*] USB_TERMSEL
+    USB_OPMODE[*] USB_DPPD USB_DMPD
+    USB_SUSPENDn FPGA_USB_PHY0_RST USB_ID_PULLUP USB_CHRGVBUS
+    USB_DISCHRGVBUS
+}]
+
+# USB3500 CLKOUT is the 60 MHz UTMI reference clock for all link-side signals.
+create_clock -period 16.667 -name usb_phy_clk [get_ports FPGA_USB_PHY0_CLK]
