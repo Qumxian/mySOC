@@ -111,7 +111,14 @@ module soc_top(
     output        SPI_CLK,
     output        SPI_CS,
     inout         SPI_MISO,
-    inout         SPI_MOSI
+    inout         SPI_MOSI,
+
+    //------VGA-------------
+    output [7:0]  VGA_R,
+    output [7:0]  VGA_G,
+    output [7:0]  VGA_B,
+    output        VGA_HSYNC,
+    output        VGA_VSYNC
 );
 wire        aclk;
 wire        aresetn;
@@ -377,6 +384,171 @@ wire                      s0_rlast;
 wire                      s0_rvalid;
 wire                      s0_rready;
 
+// AXI Crossbar: one AXI3 slave interface to eight AXI3 master interfaces.
+wire [31:0]  xbar_m_awid;
+wire [255:0] xbar_m_awaddr;
+wire [31:0]  xbar_m_awlen;
+wire [23:0]  xbar_m_awsize;
+wire [15:0]  xbar_m_awburst;
+wire [15:0]  xbar_m_awlock;
+wire [31:0]  xbar_m_awcache;
+wire [23:0]  xbar_m_awprot;
+wire [31:0]  xbar_m_awqos;
+wire [7:0]   xbar_m_awvalid;
+wire [7:0]   xbar_m_awready;
+wire [31:0]  xbar_m_wid;
+wire [255:0] xbar_m_wdata;
+wire [31:0]  xbar_m_wstrb;
+wire [7:0]   xbar_m_wlast;
+wire [7:0]   xbar_m_wvalid;
+wire [7:0]   xbar_m_wready;
+wire [31:0]  xbar_m_bid;
+wire [15:0]  xbar_m_bresp;
+wire [7:0]   xbar_m_bvalid;
+wire [7:0]   xbar_m_bready;
+wire [31:0]  xbar_m_arid;
+wire [255:0] xbar_m_araddr;
+wire [31:0]  xbar_m_arlen;
+wire [23:0]  xbar_m_arsize;
+wire [15:0]  xbar_m_arburst;
+wire [15:0]  xbar_m_arlock;
+wire [31:0]  xbar_m_arcache;
+wire [23:0]  xbar_m_arprot;
+wire [31:0]  xbar_m_arqos;
+wire [7:0]   xbar_m_arvalid;
+wire [7:0]   xbar_m_arready;
+wire [31:0]  xbar_m_rid;
+wire [255:0] xbar_m_rdata;
+wire [15:0]  xbar_m_rresp;
+wire [7:0]   xbar_m_rlast;
+wire [7:0]   xbar_m_rvalid;
+wire [7:0]   xbar_m_rready;
+
+// AXI4-Lite control interface between the protocol converters and VDMA/VTC.
+wire [31:0] vdma_axil_awaddr;
+wire [2:0]  vdma_axil_awprot;
+wire        vdma_axil_awvalid;
+wire        vdma_axil_awready;
+wire [31:0] vdma_axil_wdata;
+wire [3:0]  vdma_axil_wstrb;
+wire        vdma_axil_wvalid;
+wire        vdma_axil_wready;
+wire [1:0]  vdma_axil_bresp;
+wire        vdma_axil_bvalid;
+wire        vdma_axil_bready;
+wire [31:0] vdma_axil_araddr;
+wire [2:0]  vdma_axil_arprot;
+wire        vdma_axil_arvalid;
+wire        vdma_axil_arready;
+wire [31:0] vdma_axil_rdata;
+wire [1:0]  vdma_axil_rresp;
+wire        vdma_axil_rvalid;
+wire        vdma_axil_rready;
+
+wire [31:0] vtc_axil_awaddr;
+wire [2:0]  vtc_axil_awprot;
+wire        vtc_axil_awvalid;
+wire        vtc_axil_awready;
+wire [31:0] vtc_axil_wdata;
+wire [3:0]  vtc_axil_wstrb;
+wire        vtc_axil_wvalid;
+wire        vtc_axil_wready;
+wire [1:0]  vtc_axil_bresp;
+wire        vtc_axil_bvalid;
+wire        vtc_axil_bready;
+wire [31:0] vtc_axil_araddr;
+wire [2:0]  vtc_axil_arprot;
+wire        vtc_axil_arvalid;
+wire        vtc_axil_arready;
+wire [31:0] vtc_axil_rdata;
+wire [1:0]  vtc_axil_rresp;
+wire        vtc_axil_rvalid;
+wire        vtc_axil_rready;
+
+// VDMA MM2S memory and AXI4-Stream video interfaces.
+wire [31:0] vdma_mm2s_araddr;
+wire [7:0]  vdma_mm2s_arlen;
+wire [2:0]  vdma_mm2s_arsize;
+wire [1:0]  vdma_mm2s_arburst;
+wire [2:0]  vdma_mm2s_arprot;
+wire [3:0]  vdma_mm2s_arcache;
+wire        vdma_mm2s_arvalid;
+wire        vdma_mm2s_arready;
+wire [31:0] vdma_mm2s_rdata;
+wire [1:0]  vdma_mm2s_rresp;
+wire        vdma_mm2s_rlast;
+wire        vdma_mm2s_rvalid;
+wire        vdma_mm2s_rready;
+wire [23:0] vdma_axis_tdata;
+wire [2:0]  vdma_axis_tkeep;
+wire        vdma_axis_tuser;
+wire        vdma_axis_tvalid;
+wire        vdma_axis_tready;
+wire        vdma_axis_tlast;
+wire [5:0]  vdma_frame_ptr;
+wire        vdma_mm2s_introut;
+
+// VTC and AXI4-Stream to native-video signals.
+wire        vtc_hsync;
+wire        vtc_hblank;
+wire        vtc_vsync;
+wire        vtc_vblank;
+wire        vtc_active_video;
+wire        vtc_irq;
+wire [0:0]  vtc_fsync;
+wire        video_vtg_ce;
+wire        video_locked;
+wire        video_overflow;
+wire        video_underflow;
+wire [10:0] video_fifo_read_level;
+wire [31:0] video_status;
+wire        video_sof_state;
+wire        video_active;
+wire        video_vsync;
+wire        video_hsync;
+wire        video_vblank;
+wire        video_hblank;
+wire        video_field_id;
+wire [23:0] video_data;
+reg         video_pixel_ce;
+
+// Output of the reused 2x1 AXI interconnect that arbitrates CPU and VDMA DDR reads.
+wire [4:0]  vga_ddr_awid;
+wire [31:0] vga_ddr_awaddr;
+wire [3:0]  vga_ddr_awlen;
+wire [2:0]  vga_ddr_awsize;
+wire [1:0]  vga_ddr_awburst;
+wire [1:0]  vga_ddr_awlock;
+wire [3:0]  vga_ddr_awcache;
+wire [2:0]  vga_ddr_awprot;
+wire        vga_ddr_awvalid;
+wire        vga_ddr_awready;
+wire [31:0] vga_ddr_wdata;
+wire [3:0]  vga_ddr_wstrb;
+wire        vga_ddr_wlast;
+wire        vga_ddr_wvalid;
+wire        vga_ddr_wready;
+wire [3:0]  vga_ddr_bid;
+wire [1:0]  vga_ddr_bresp;
+wire        vga_ddr_bvalid;
+wire        vga_ddr_bready;
+wire [4:0]  vga_ddr_arid;
+wire [31:0] vga_ddr_araddr;
+wire [3:0]  vga_ddr_arlen;
+wire [2:0]  vga_ddr_arsize;
+wire [1:0]  vga_ddr_arburst;
+wire [1:0]  vga_ddr_arlock;
+wire [3:0]  vga_ddr_arcache;
+wire [2:0]  vga_ddr_arprot;
+wire        vga_ddr_arvalid;
+wire        vga_ddr_arready;
+wire [3:0]  vga_ddr_rid;
+wire [31:0] vga_ddr_rdata;
+wire [1:0]  vga_ddr_rresp;
+wire        vga_ddr_rlast;
+wire        vga_ddr_rvalid;
+wire        vga_ddr_rready;
+
 wire [8            -1 :0] mig_awid;
 wire [`Lawaddr     -1 :0] mig_awaddr;
 wire [8            -1 :0] mig_awlen;
@@ -592,22 +764,45 @@ assign     uart0_ri_i  = UART_RI ;
 
 //interrupt
 wire mac_int;
-wire [5:0] int_out;
-wire [5:0] int_n_i;
-assign int_out = {1'b0,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
+wire [7:0] int_out;
+wire [7:0] int_n_i;
+wire [7:0] cpu_intrpt;
+assign int_out = {vdma_mm2s_introut,vtc_irq,1'b0,dma_int,nand_int,spi_inta_o,uart0_int,mac_int};
 assign int_n_i = ~int_out;
+// Bit 5 is reserved for USB.
+assign cpu_intrpt = int_out;
 
 reg cpu_aresetn_1;
 reg cpu_aresetn_2;
 
 wire cpu_aresetn;
 
-always @(posedge cpu_clk) begin
-    cpu_aresetn_1 <= aresetn;
-    cpu_aresetn_2 <= cpu_aresetn_1;
+always @(posedge cpu_clk or negedge aresetn) begin
+    if (!aresetn) begin
+        cpu_aresetn_1 <= 1'b0;
+        cpu_aresetn_2 <= 1'b0;
+    end else begin
+        cpu_aresetn_1 <= 1'b1;
+        cpu_aresetn_2 <= cpu_aresetn_1;
+    end
 end
 
 assign cpu_aresetn = cpu_aresetn_2;
+
+// 640x480@60 25MHz clk
+always @(posedge cpu_clk) begin
+    if (!cpu_aresetn)
+        video_pixel_ce <= 1'b0;
+    else
+        video_pixel_ce <= ~video_pixel_ce;
+end
+
+// AXI4-Stream RGB component order is {R,B,G} for the configured video format.
+assign VGA_R     = video_active ? video_data[23:16] : 8'b0;
+assign VGA_G     = video_active ? video_data[7:0]   : 8'b0;
+assign VGA_B     = video_active ? video_data[15:8]  : 8'b0;
+assign VGA_HSYNC = video_hsync;
+assign VGA_VSYNC = video_vsync;
 
 //debug signals
 wire [31:0] debug_wb_pc;
@@ -719,13 +914,21 @@ debug_sram u_debug_sram(
 
 );
 
+// debug UART is disconnected.
+assign uart_arready = 1'b0;
+assign uart_rid     = 4'b0;
+assign uart_rdata   = 32'b0;
+assign uart_rresp   = 2'b0;
+assign uart_rlast   = 1'b0;
+assign uart_rvalid  = 1'b0;
+
 // cpu
 core_top cpu_mid(
-  .aclk             (cpu_clk),
-  .intrpt           ({3'b0, int_out[4:0]}),  //232 only 5bit
+  .aclk         (cpu_clk),
+  .intrpt       (cpu_intrpt),
   //.nmi              (1'b1),
 
-  .aresetn          (cpu_aresetn  ),
+  .aresetn      (cpu_aresetn  ),
   .arid         (m0_arid[3:0] ),
   .araddr       (m0_araddr    ),
   .arlen        (m0_arlen     ),
@@ -775,6 +978,7 @@ core_top cpu_mid(
   .debug0_wb_rf_wdata  (debug_wb_rf_wdata)
 );
 
+/*
 //AXI_2x1_MUX
 axi_2x1_mux u_axi_2x1_mux
 (
@@ -900,6 +1104,7 @@ axi_2x1_mux u_axi_2x1_mux
     .M00_AXI_BRESP       (`Lbresp'b0  ),
     .M00_AXI_BVALID      (1'b0        )
 );
+*/
 
 // cpu_axi asyn
 axi_clock_converter_0 AXI_CLK_CONVERTER (
@@ -924,23 +1129,23 @@ axi_clock_converter_0 AXI_CLK_CONVERTER (
     .s_axi_bresp      (m0_bresp           ),
     .s_axi_bvalid     (m0_bvalid          ),
     .s_axi_bready     (m0_bready          ),
-    .s_axi_arid       (m1_arid[3:0]       ),
-    .s_axi_araddr     (m1_araddr          ),
-    .s_axi_arlen      (m1_arlen           ),
-    .s_axi_arsize     (m1_arsize          ),
-    .s_axi_arburst    (m1_arburst         ),
-    .s_axi_arlock     (m1_arlock          ),
-    .s_axi_arcache    (m1_arcache         ),
-    .s_axi_arprot     (m1_arprot          ),
+    .s_axi_arid       (m0_arid[3:0]       ),
+    .s_axi_araddr     (m0_araddr          ),
+    .s_axi_arlen      (m0_arlen           ),
+    .s_axi_arsize     (m0_arsize          ),
+    .s_axi_arburst    (m0_arburst         ),
+    .s_axi_arlock     (m0_arlock          ),
+    .s_axi_arcache    (m0_arcache         ),
+    .s_axi_arprot     (m0_arprot          ),
     .s_axi_arqos      (4'b0               ),
-    .s_axi_arvalid    (m1_arvalid         ),
-    .s_axi_arready    (m1_arready         ),
-    .s_axi_rid        (m1_rid[3:0]        ),
-    .s_axi_rdata      (m1_rdata           ),
-    .s_axi_rresp      (m1_rresp           ),
-    .s_axi_rlast      (m1_rlast           ),
-    .s_axi_rvalid     (m1_rvalid          ),
-    .s_axi_rready     (m1_rready          ),
+    .s_axi_arvalid    (m0_arvalid         ),
+    .s_axi_arready    (m0_arready         ),
+    .s_axi_rid        (m0_rid[3:0]        ),
+    .s_axi_rdata      (m0_rdata           ),
+    .s_axi_rresp      (m0_rresp           ),
+    .s_axi_rlast      (m0_rlast           ),
+    .s_axi_rvalid     (m0_rvalid          ),
+    .s_axi_rready     (m0_rready          ),
 
     .s_axi_aclk	      (cpu_clk            ),
     .s_axi_aresetn    (cpu_aresetn        ),
@@ -988,7 +1193,7 @@ axi_clock_converter_0 AXI_CLK_CONVERTER (
     .m_axi_aresetn    (aresetn            )
 );
 
-// AXI_MUX
+/* Legacy AXI slave mux; replaced by axi_crossbar_0 below.
 axi_slave_mux AXI_SLAVE_MUX
 (
 .axi_s_aresetn     (aresetn              ),
@@ -1217,6 +1422,280 @@ axi_slave_mux AXI_SLAVE_MUX
 .s4_rready         (mac_s_rready       ),
 
 .axi_s_aclk        (aclk                )
+);
+*/
+
+// AXI address space (configured in axi_crossbar_0):
+// M00  DDR      0x00000000-0x07FFFFFF
+// M01  SPI      0x1C000000-0x1C0FFFFF, 0x1FE80000-0x1FE8FFFF
+// M02  APB_DEV  0x1FE00000-0x1FE0FFFF, 0x1FE70000-0x1FE7FFFF
+// M03  CONFREG  0x1FD00000-0x1FD0FFFF
+// M04  MAC      0x1FF00000-0x1FF0FFFF
+// M05  VDMA     0x1FB00000-0x1FB0FFFF
+// M06  VTC      0x1FB10000-0x1FB1FFFF
+// M07  USB      0x1FB20000-0x1FB2FFFF (reserved; no slave connected yet)
+
+// Crossbar outputs M00-M04 retain the original SoC signal names.
+assign {mac_s_awid,    conf_s_awid,    apb_s_awid,    spi_s_awid,    s0_awid}    = xbar_m_awid[19:0];
+assign {mac_s_awaddr,  conf_s_awaddr,  apb_s_awaddr,  spi_s_awaddr,  s0_awaddr}  = xbar_m_awaddr[159:0];
+assign {mac_s_awlen,   conf_s_awlen,   apb_s_awlen,   spi_s_awlen,   s0_awlen}   = xbar_m_awlen[19:0];
+assign {mac_s_awsize,  conf_s_awsize,  apb_s_awsize,  spi_s_awsize,  s0_awsize}  = xbar_m_awsize[14:0];
+assign {mac_s_awburst, conf_s_awburst, apb_s_awburst, spi_s_awburst, s0_awburst} = xbar_m_awburst[9:0];
+assign {mac_s_awlock,  conf_s_awlock,  apb_s_awlock,  spi_s_awlock,  s0_awlock}  = xbar_m_awlock[9:0];
+assign {mac_s_awcache, conf_s_awcache, apb_s_awcache, spi_s_awcache, s0_awcache} = xbar_m_awcache[19:0];
+assign {mac_s_awprot,  conf_s_awprot,  apb_s_awprot,  spi_s_awprot,  s0_awprot}  = xbar_m_awprot[14:0];
+assign {mac_s_awvalid, conf_s_awvalid, apb_s_awvalid, spi_s_awvalid, s0_awvalid} = xbar_m_awvalid[4:0];
+assign xbar_m_awready[4:0] = {mac_s_awready,conf_s_awready,apb_s_awready,spi_s_awready,s0_awready};
+
+assign {mac_s_wid,    conf_s_wid,    apb_s_wid,    spi_s_wid,    s0_wid}    = xbar_m_wid[19:0];
+assign {mac_s_wdata,  conf_s_wdata,  apb_s_wdata,  spi_s_wdata,  s0_wdata}  = xbar_m_wdata[159:0];
+assign {mac_s_wstrb,  conf_s_wstrb,  apb_s_wstrb,  spi_s_wstrb,  s0_wstrb}  = xbar_m_wstrb[19:0];
+assign {mac_s_wlast,  conf_s_wlast,  apb_s_wlast,  spi_s_wlast,  s0_wlast}  = xbar_m_wlast[4:0];
+assign {mac_s_wvalid, conf_s_wvalid, apb_s_wvalid, spi_s_wvalid, s0_wvalid} = xbar_m_wvalid[4:0];
+assign xbar_m_wready[4:0] = {mac_s_wready,conf_s_wready,apb_s_wready,spi_s_wready,s0_wready};
+
+assign xbar_m_bid[19:0]    = {mac_s_bid,conf_s_bid,apb_s_bid,spi_s_bid,s0_bid};
+assign xbar_m_bresp[9:0]   = {mac_s_bresp,conf_s_bresp,apb_s_bresp,spi_s_bresp,s0_bresp};
+assign xbar_m_bvalid[4:0]  = {mac_s_bvalid,conf_s_bvalid,apb_s_bvalid,spi_s_bvalid,s0_bvalid};
+assign {mac_s_bready,conf_s_bready,apb_s_bready,spi_s_bready,s0_bready} = xbar_m_bready[4:0];
+
+assign {mac_s_arid,    conf_s_arid,    apb_s_arid,    spi_s_arid,    s0_arid}    = xbar_m_arid[19:0];
+assign {mac_s_araddr,  conf_s_araddr,  apb_s_araddr,  spi_s_araddr,  s0_araddr}  = xbar_m_araddr[159:0];
+assign {mac_s_arlen,   conf_s_arlen,   apb_s_arlen,   spi_s_arlen,   s0_arlen}   = xbar_m_arlen[19:0];
+assign {mac_s_arsize,  conf_s_arsize,  apb_s_arsize,  spi_s_arsize,  s0_arsize}  = xbar_m_arsize[14:0];
+assign {mac_s_arburst, conf_s_arburst, apb_s_arburst, spi_s_arburst, s0_arburst} = xbar_m_arburst[9:0];
+assign {mac_s_arlock,  conf_s_arlock,  apb_s_arlock,  spi_s_arlock,  s0_arlock}  = xbar_m_arlock[9:0];
+assign {mac_s_arcache, conf_s_arcache, apb_s_arcache, spi_s_arcache, s0_arcache} = xbar_m_arcache[19:0];
+assign {mac_s_arprot,  conf_s_arprot,  apb_s_arprot,  spi_s_arprot,  s0_arprot}  = xbar_m_arprot[14:0];
+assign {mac_s_arvalid, conf_s_arvalid, apb_s_arvalid, spi_s_arvalid, s0_arvalid} = xbar_m_arvalid[4:0];
+assign xbar_m_arready[4:0] = {mac_s_arready,conf_s_arready,apb_s_arready,spi_s_arready,s0_arready};
+
+assign xbar_m_rid[19:0]     = {mac_s_rid,conf_s_rid,apb_s_rid,spi_s_rid,s0_rid};
+assign xbar_m_rdata[159:0]  = {mac_s_rdata,conf_s_rdata,apb_s_rdata,spi_s_rdata,s0_rdata};
+assign xbar_m_rresp[9:0]    = {mac_s_rresp,conf_s_rresp,apb_s_rresp,spi_s_rresp,s0_rresp};
+assign xbar_m_rlast[4:0]    = {mac_s_rlast,conf_s_rlast,apb_s_rlast,spi_s_rlast,s0_rlast};
+assign xbar_m_rvalid[4:0]   = {mac_s_rvalid,conf_s_rvalid,apb_s_rvalid,spi_s_rvalid,s0_rvalid};
+assign {mac_s_rready,conf_s_rready,apb_s_rready,spi_s_rready,s0_rready} = xbar_m_rready[4:0];
+
+// M07 is reserved for the future USB AXI slave. No transaction is generated
+// for it by current software; response inputs are tied inactive until USB is added.
+assign xbar_m_awready[7]    = 1'b0;
+assign xbar_m_wready[7]     = 1'b0;
+assign xbar_m_bid[31:28]    = 4'b0;
+assign xbar_m_bresp[15:14]  = 2'b0;
+assign xbar_m_bvalid[7]     = 1'b0;
+assign xbar_m_arready[7]    = 1'b0;
+assign xbar_m_rid[31:28]    = 4'b0;
+assign xbar_m_rdata[255:224]= 32'b0;
+assign xbar_m_rresp[15:14]  = 2'b0;
+assign xbar_m_rlast[7]      = 1'b0;
+assign xbar_m_rvalid[7]     = 1'b0;
+
+axi_crossbar_0 AXI_CROSSBAR (
+    .aclk          (aclk),
+    .aresetn       (aresetn),
+    .s_axi_awid    (m0_async_awid[3:0]),
+    .s_axi_awaddr  (m0_async_awaddr),
+    .s_axi_awlen   (m0_async_awlen),
+    .s_axi_awsize  (m0_async_awsize),
+    .s_axi_awburst (m0_async_awburst),
+    .s_axi_awlock  (m0_async_awlock),
+    .s_axi_awcache (m0_async_awcache),
+    .s_axi_awprot  (m0_async_awprot),
+    .s_axi_awqos   (4'b0),
+    .s_axi_awvalid (m0_async_awvalid),
+    .s_axi_awready (m0_async_awready),
+    .s_axi_wid     (m0_async_wid[3:0]),
+    .s_axi_wdata   (m0_async_wdata),
+    .s_axi_wstrb   (m0_async_wstrb),
+    .s_axi_wlast   (m0_async_wlast),
+    .s_axi_wvalid  (m0_async_wvalid),
+    .s_axi_wready  (m0_async_wready),
+    .s_axi_bid     (m0_async_bid[3:0]),
+    .s_axi_bresp   (m0_async_bresp),
+    .s_axi_bvalid  (m0_async_bvalid),
+    .s_axi_bready  (m0_async_bready),
+    .s_axi_arid    (m0_async_arid[3:0]),
+    .s_axi_araddr  (m0_async_araddr),
+    .s_axi_arlen   (m0_async_arlen),
+    .s_axi_arsize  (m0_async_arsize),
+    .s_axi_arburst (m0_async_arburst),
+    .s_axi_arlock  (m0_async_arlock),
+    .s_axi_arcache (m0_async_arcache),
+    .s_axi_arprot  (m0_async_arprot),
+    .s_axi_arqos   (4'b0),
+    .s_axi_arvalid (m0_async_arvalid),
+    .s_axi_arready (m0_async_arready),
+    .s_axi_rid     (m0_async_rid[3:0]),
+    .s_axi_rdata   (m0_async_rdata),
+    .s_axi_rresp   (m0_async_rresp),
+    .s_axi_rlast   (m0_async_rlast),
+    .s_axi_rvalid  (m0_async_rvalid),
+    .s_axi_rready  (m0_async_rready),
+    .m_axi_awid    (xbar_m_awid),
+    .m_axi_awaddr  (xbar_m_awaddr),
+    .m_axi_awlen   (xbar_m_awlen),
+    .m_axi_awsize  (xbar_m_awsize),
+    .m_axi_awburst (xbar_m_awburst),
+    .m_axi_awlock  (xbar_m_awlock),
+    .m_axi_awcache (xbar_m_awcache),
+    .m_axi_awprot  (xbar_m_awprot),
+    .m_axi_awqos   (xbar_m_awqos),
+    .m_axi_awvalid (xbar_m_awvalid),
+    .m_axi_awready (xbar_m_awready),
+    .m_axi_wid     (xbar_m_wid),
+    .m_axi_wdata   (xbar_m_wdata),
+    .m_axi_wstrb   (xbar_m_wstrb),
+    .m_axi_wlast   (xbar_m_wlast),
+    .m_axi_wvalid  (xbar_m_wvalid),
+    .m_axi_wready  (xbar_m_wready),
+    .m_axi_bid     (xbar_m_bid),
+    .m_axi_bresp   (xbar_m_bresp),
+    .m_axi_bvalid  (xbar_m_bvalid),
+    .m_axi_bready  (xbar_m_bready),
+    .m_axi_arid    (xbar_m_arid),
+    .m_axi_araddr  (xbar_m_araddr),
+    .m_axi_arlen   (xbar_m_arlen),
+    .m_axi_arsize  (xbar_m_arsize),
+    .m_axi_arburst (xbar_m_arburst),
+    .m_axi_arlock  (xbar_m_arlock),
+    .m_axi_arcache (xbar_m_arcache),
+    .m_axi_arprot  (xbar_m_arprot),
+    .m_axi_arqos   (xbar_m_arqos),
+    .m_axi_arvalid (xbar_m_arvalid),
+    .m_axi_arready (xbar_m_arready),
+    .m_axi_rid     (xbar_m_rid),
+    .m_axi_rdata   (xbar_m_rdata),
+    .m_axi_rresp   (xbar_m_rresp),
+    .m_axi_rlast   (xbar_m_rlast),
+    .m_axi_rvalid  (xbar_m_rvalid),
+    .m_axi_rready  (xbar_m_rready)
+);
+
+// M05: AXI3 control transactions to the VDMA AXI4-Lite register interface.
+axi_protocol_converter_0 VDMA_PROTOCOL_CONVERTER (
+    .aclk          (aclk),
+    .aresetn       (aresetn),
+    .s_axi_awid    (xbar_m_awid[5*4 +: 4]),
+    .s_axi_awaddr  (xbar_m_awaddr[5*32 +: 32]),
+    .s_axi_awlen   (xbar_m_awlen[5*4 +: 4]),
+    .s_axi_awsize  (xbar_m_awsize[5*3 +: 3]),
+    .s_axi_awburst (xbar_m_awburst[5*2 +: 2]),
+    .s_axi_awlock  (xbar_m_awlock[5*2 +: 2]),
+    .s_axi_awcache (xbar_m_awcache[5*4 +: 4]),
+    .s_axi_awprot  (xbar_m_awprot[5*3 +: 3]),
+    .s_axi_awqos   (xbar_m_awqos[5*4 +: 4]),
+    .s_axi_awvalid (xbar_m_awvalid[5]),
+    .s_axi_awready (xbar_m_awready[5]),
+    .s_axi_wid     (xbar_m_wid[5*4 +: 4]),
+    .s_axi_wdata   (xbar_m_wdata[5*32 +: 32]),
+    .s_axi_wstrb   (xbar_m_wstrb[5*4 +: 4]),
+    .s_axi_wlast   (xbar_m_wlast[5]),
+    .s_axi_wvalid  (xbar_m_wvalid[5]),
+    .s_axi_wready  (xbar_m_wready[5]),
+    .s_axi_bid     (xbar_m_bid[5*4 +: 4]),
+    .s_axi_bresp   (xbar_m_bresp[5*2 +: 2]),
+    .s_axi_bvalid  (xbar_m_bvalid[5]),
+    .s_axi_bready  (xbar_m_bready[5]),
+    .s_axi_arid    (xbar_m_arid[5*4 +: 4]),
+    .s_axi_araddr  (xbar_m_araddr[5*32 +: 32]),
+    .s_axi_arlen   (xbar_m_arlen[5*4 +: 4]),
+    .s_axi_arsize  (xbar_m_arsize[5*3 +: 3]),
+    .s_axi_arburst (xbar_m_arburst[5*2 +: 2]),
+    .s_axi_arlock  (xbar_m_arlock[5*2 +: 2]),
+    .s_axi_arcache (xbar_m_arcache[5*4 +: 4]),
+    .s_axi_arprot  (xbar_m_arprot[5*3 +: 3]),
+    .s_axi_arqos   (xbar_m_arqos[5*4 +: 4]),
+    .s_axi_arvalid (xbar_m_arvalid[5]),
+    .s_axi_arready (xbar_m_arready[5]),
+    .s_axi_rid     (xbar_m_rid[5*4 +: 4]),
+    .s_axi_rdata   (xbar_m_rdata[5*32 +: 32]),
+    .s_axi_rresp   (xbar_m_rresp[5*2 +: 2]),
+    .s_axi_rlast   (xbar_m_rlast[5]),
+    .s_axi_rvalid  (xbar_m_rvalid[5]),
+    .s_axi_rready  (xbar_m_rready[5]),
+    .m_axi_awaddr  (vdma_axil_awaddr),
+    .m_axi_awprot  (vdma_axil_awprot),
+    .m_axi_awvalid (vdma_axil_awvalid),
+    .m_axi_awready (vdma_axil_awready),
+    .m_axi_wdata   (vdma_axil_wdata),
+    .m_axi_wstrb   (vdma_axil_wstrb),
+    .m_axi_wvalid  (vdma_axil_wvalid),
+    .m_axi_wready  (vdma_axil_wready),
+    .m_axi_bresp   (vdma_axil_bresp),
+    .m_axi_bvalid  (vdma_axil_bvalid),
+    .m_axi_bready  (vdma_axil_bready),
+    .m_axi_araddr  (vdma_axil_araddr),
+    .m_axi_arprot  (vdma_axil_arprot),
+    .m_axi_arvalid (vdma_axil_arvalid),
+    .m_axi_arready (vdma_axil_arready),
+    .m_axi_rdata   (vdma_axil_rdata),
+    .m_axi_rresp   (vdma_axil_rresp),
+    .m_axi_rvalid  (vdma_axil_rvalid),
+    .m_axi_rready  (vdma_axil_rready)
+);
+
+// M06: AXI3 control transactions to the VTC AXI4-Lite register interface.
+axi_protocol_converter_0 VTC_PROTOCOL_CONVERTER (
+    .aclk          (aclk),
+    .aresetn       (aresetn),
+    .s_axi_awid    (xbar_m_awid[6*4 +: 4]),
+    .s_axi_awaddr  (xbar_m_awaddr[6*32 +: 32]),
+    .s_axi_awlen   (xbar_m_awlen[6*4 +: 4]),
+    .s_axi_awsize  (xbar_m_awsize[6*3 +: 3]),
+    .s_axi_awburst (xbar_m_awburst[6*2 +: 2]),
+    .s_axi_awlock  (xbar_m_awlock[6*2 +: 2]),
+    .s_axi_awcache (xbar_m_awcache[6*4 +: 4]),
+    .s_axi_awprot  (xbar_m_awprot[6*3 +: 3]),
+    .s_axi_awqos   (xbar_m_awqos[6*4 +: 4]),
+    .s_axi_awvalid (xbar_m_awvalid[6]),
+    .s_axi_awready (xbar_m_awready[6]),
+    .s_axi_wid     (xbar_m_wid[6*4 +: 4]),
+    .s_axi_wdata   (xbar_m_wdata[6*32 +: 32]),
+    .s_axi_wstrb   (xbar_m_wstrb[6*4 +: 4]),
+    .s_axi_wlast   (xbar_m_wlast[6]),
+    .s_axi_wvalid  (xbar_m_wvalid[6]),
+    .s_axi_wready  (xbar_m_wready[6]),
+    .s_axi_bid     (xbar_m_bid[6*4 +: 4]),
+    .s_axi_bresp   (xbar_m_bresp[6*2 +: 2]),
+    .s_axi_bvalid  (xbar_m_bvalid[6]),
+    .s_axi_bready  (xbar_m_bready[6]),
+    .s_axi_arid    (xbar_m_arid[6*4 +: 4]),
+    .s_axi_araddr  (xbar_m_araddr[6*32 +: 32]),
+    .s_axi_arlen   (xbar_m_arlen[6*4 +: 4]),
+    .s_axi_arsize  (xbar_m_arsize[6*3 +: 3]),
+    .s_axi_arburst (xbar_m_arburst[6*2 +: 2]),
+    .s_axi_arlock  (xbar_m_arlock[6*2 +: 2]),
+    .s_axi_arcache (xbar_m_arcache[6*4 +: 4]),
+    .s_axi_arprot  (xbar_m_arprot[6*3 +: 3]),
+    .s_axi_arqos   (xbar_m_arqos[6*4 +: 4]),
+    .s_axi_arvalid (xbar_m_arvalid[6]),
+    .s_axi_arready (xbar_m_arready[6]),
+    .s_axi_rid     (xbar_m_rid[6*4 +: 4]),
+    .s_axi_rdata   (xbar_m_rdata[6*32 +: 32]),
+    .s_axi_rresp   (xbar_m_rresp[6*2 +: 2]),
+    .s_axi_rlast   (xbar_m_rlast[6]),
+    .s_axi_rvalid  (xbar_m_rvalid[6]),
+    .s_axi_rready  (xbar_m_rready[6]),
+    .m_axi_awaddr  (vtc_axil_awaddr),
+    .m_axi_awprot  (vtc_axil_awprot),
+    .m_axi_awvalid (vtc_axil_awvalid),
+    .m_axi_awready (vtc_axil_awready),
+    .m_axi_wdata   (vtc_axil_wdata),
+    .m_axi_wstrb   (vtc_axil_wstrb),
+    .m_axi_wvalid  (vtc_axil_wvalid),
+    .m_axi_wready  (vtc_axil_wready),
+    .m_axi_bresp   (vtc_axil_bresp),
+    .m_axi_bvalid  (vtc_axil_bvalid),
+    .m_axi_bready  (vtc_axil_bready),
+    .m_axi_araddr  (vtc_axil_araddr),
+    .m_axi_arprot  (vtc_axil_arprot),
+    .m_axi_arvalid (vtc_axil_arvalid),
+    .m_axi_arready (vtc_axil_arready),
+    .m_axi_rdata   (vtc_axil_rdata),
+    .m_axi_rresp   (vtc_axil_rresp),
+    .m_axi_rvalid  (vtc_axil_rvalid),
+    .m_axi_rready  (vtc_axil_rready)
 );
 
 //SPI
@@ -1447,6 +1926,250 @@ ethernet_top ETHERNET_TOP(
 
 );
 
+// VGA VDMA control registers: 0x1FB00000-0x1FB0FFFF.
+axi_vdma_0 VGA_VDMA (
+    .s_axi_lite_aclk       (aclk),
+    .m_axi_mm2s_aclk       (aclk),
+    .m_axis_mm2s_aclk      (cpu_clk),
+    .axi_resetn            (aresetn),
+    .s_axi_lite_awvalid    (vdma_axil_awvalid),
+    .s_axi_lite_awready    (vdma_axil_awready),
+    .s_axi_lite_awaddr     (vdma_axil_awaddr[8:0]),
+    .s_axi_lite_wvalid     (vdma_axil_wvalid),
+    .s_axi_lite_wready     (vdma_axil_wready),
+    .s_axi_lite_wdata      (vdma_axil_wdata),
+    .s_axi_lite_bresp      (vdma_axil_bresp),
+    .s_axi_lite_bvalid     (vdma_axil_bvalid),
+    .s_axi_lite_bready     (vdma_axil_bready),
+    .s_axi_lite_arvalid    (vdma_axil_arvalid),
+    .s_axi_lite_arready    (vdma_axil_arready),
+    .s_axi_lite_araddr     (vdma_axil_araddr[8:0]),
+    .s_axi_lite_rvalid     (vdma_axil_rvalid),
+    .s_axi_lite_rready     (vdma_axil_rready),
+    .s_axi_lite_rdata      (vdma_axil_rdata),
+    .s_axi_lite_rresp      (vdma_axil_rresp),
+    .mm2s_fsync            (vtc_fsync[0]),
+    .mm2s_frame_ptr_out    (vdma_frame_ptr),
+    .m_axi_mm2s_araddr     (vdma_mm2s_araddr),
+    .m_axi_mm2s_arlen      (vdma_mm2s_arlen),
+    .m_axi_mm2s_arsize     (vdma_mm2s_arsize),
+    .m_axi_mm2s_arburst    (vdma_mm2s_arburst),
+    .m_axi_mm2s_arprot     (vdma_mm2s_arprot),
+    .m_axi_mm2s_arcache    (vdma_mm2s_arcache),
+    .m_axi_mm2s_arvalid    (vdma_mm2s_arvalid),
+    .m_axi_mm2s_arready    (vdma_mm2s_arready),
+    .m_axi_mm2s_rdata      (vdma_mm2s_rdata),
+    .m_axi_mm2s_rresp      (vdma_mm2s_rresp),
+    .m_axi_mm2s_rlast      (vdma_mm2s_rlast),
+    .m_axi_mm2s_rvalid     (vdma_mm2s_rvalid),
+    .m_axi_mm2s_rready     (vdma_mm2s_rready),
+    .m_axis_mm2s_tdata     (vdma_axis_tdata),
+    .m_axis_mm2s_tkeep     (vdma_axis_tkeep),
+    .m_axis_mm2s_tuser     (vdma_axis_tuser),
+    .m_axis_mm2s_tvalid    (vdma_axis_tvalid),
+    .m_axis_mm2s_tready    (vdma_axis_tready),
+    .m_axis_mm2s_tlast     (vdma_axis_tlast),
+    .mm2s_introut          (vdma_mm2s_introut)
+);
+
+// VGA timing controller registers: 0x1FB10000-0x1FB1FFFF.
+v_tc_0 VGA_VTC (
+    .clk              (cpu_clk),
+    .clken            (video_pixel_ce),
+    .s_axi_aclk       (aclk),
+    .s_axi_aclken     (1'b1),
+    .gen_clken        (video_pixel_ce & video_vtg_ce),
+    .sof_state        (video_sof_state),
+    .hsync_out        (vtc_hsync),
+    .hblank_out       (vtc_hblank),
+    .vsync_out        (vtc_vsync),
+    .vblank_out       (vtc_vblank),
+    .active_video_out (vtc_active_video),
+    .resetn           (cpu_aresetn),
+    .s_axi_aresetn    (aresetn),
+    .s_axi_awaddr     (vtc_axil_awaddr[8:0]),
+    .s_axi_awvalid    (vtc_axil_awvalid),
+    .s_axi_awready    (vtc_axil_awready),
+    .s_axi_wdata      (vtc_axil_wdata),
+    .s_axi_wstrb      (vtc_axil_wstrb),
+    .s_axi_wvalid     (vtc_axil_wvalid),
+    .s_axi_wready     (vtc_axil_wready),
+    .s_axi_bresp      (vtc_axil_bresp),
+    .s_axi_bvalid     (vtc_axil_bvalid),
+    .s_axi_bready     (vtc_axil_bready),
+    .s_axi_araddr     (vtc_axil_araddr[8:0]),
+    .s_axi_arvalid    (vtc_axil_arvalid),
+    .s_axi_arready    (vtc_axil_arready),
+    .s_axi_rdata      (vtc_axil_rdata),
+    .s_axi_rresp      (vtc_axil_rresp),
+    .s_axi_rvalid     (vtc_axil_rvalid),
+    .s_axi_rready     (vtc_axil_rready),
+    .irq              (vtc_irq),
+    .fsync_in         (1'b0),
+    .fsync_out        (vtc_fsync)
+);
+
+v_axi4s_vid_out_0 VGA_VIDEO_OUT (
+    .aclk                (cpu_clk),
+    .aclken              (1'b1),
+    .aresetn             (cpu_aresetn),
+    .s_axis_video_tdata  (vdma_axis_tdata),
+    .s_axis_video_tvalid (vdma_axis_tvalid),
+    .s_axis_video_tready (vdma_axis_tready),
+    .s_axis_video_tuser  (vdma_axis_tuser),
+    .s_axis_video_tlast  (vdma_axis_tlast),
+    .fid                 (1'b0),
+    .vid_io_out_ce       (video_pixel_ce),
+    .vid_active_video    (video_active),
+    .vid_vsync           (video_vsync),
+    .vid_hsync           (video_hsync),
+    .vid_vblank          (video_vblank),
+    .vid_hblank          (video_hblank),
+    .vid_field_id        (video_field_id),
+    .vid_data            (video_data),
+    .vtg_vsync           (vtc_vsync),
+    .vtg_hsync           (vtc_hsync),
+    .vtg_vblank          (vtc_vblank),
+    .vtg_hblank          (vtc_hblank),
+    .vtg_active_video    (vtc_active_video),
+    .vtg_field_id        (1'b0),
+    .vtg_ce              (video_vtg_ce),
+    .locked              (video_locked),
+    .overflow            (video_overflow),
+    .underflow           (video_underflow),
+    .fifo_read_level     (video_fifo_read_level),
+    .status              (video_status),
+    .sof_state_out       (video_sof_state)
+);
+
+/* Removed: VDMA now uses axi_interconnect_0/S03_AXI directly.
+// Reuse the existing 2x1 AXI interconnect to merge the CPU DDR path (S00)
+// and the read-only VDMA MM2S path (S01) before mig_axi_interconnect/S00_AXI.
+axi_2x1_mux VGA_DDR_MUX (
+    .INTERCONNECT_ACLK    (aclk),
+    .INTERCONNECT_ARESETN (aresetn),
+    .S00_AXI_ACLK         (aclk),
+    .S00_AXI_ARESET_OUT_N (),
+    .S00_AXI_AWID         (s0_awid),
+    .S00_AXI_AWADDR       (s0_awaddr),
+    .S00_AXI_AWLEN        (s0_awlen),
+    .S00_AXI_AWSIZE       (s0_awsize),
+    .S00_AXI_AWBURST      (s0_awburst),
+    .S00_AXI_AWLOCK       (s0_awlock),
+    .S00_AXI_AWCACHE      (s0_awcache),
+    .S00_AXI_AWPROT       (s0_awprot),
+    .S00_AXI_AWQOS        (4'b0),
+    .S00_AXI_AWVALID      (s0_awvalid),
+    .S00_AXI_AWREADY      (s0_awready),
+    .S00_AXI_WDATA        (s0_wdata),
+    .S00_AXI_WSTRB        (s0_wstrb),
+    .S00_AXI_WLAST        (s0_wlast),
+    .S00_AXI_WVALID       (s0_wvalid),
+    .S00_AXI_WREADY       (s0_wready),
+    .S00_AXI_BID          (s0_bid),
+    .S00_AXI_BRESP        (s0_bresp),
+    .S00_AXI_BVALID       (s0_bvalid),
+    .S00_AXI_BREADY       (s0_bready),
+    .S00_AXI_ARID         (s0_arid),
+    .S00_AXI_ARADDR       (s0_araddr),
+    .S00_AXI_ARLEN        (s0_arlen),
+    .S00_AXI_ARSIZE       (s0_arsize),
+    .S00_AXI_ARBURST      (s0_arburst),
+    .S00_AXI_ARLOCK       (s0_arlock),
+    .S00_AXI_ARCACHE      (s0_arcache),
+    .S00_AXI_ARPROT       (s0_arprot),
+    .S00_AXI_ARQOS        (4'b0),
+    .S00_AXI_ARVALID      (s0_arvalid),
+    .S00_AXI_ARREADY      (s0_arready),
+    .S00_AXI_RID          (s0_rid),
+    .S00_AXI_RDATA        (s0_rdata),
+    .S00_AXI_RRESP        (s0_rresp),
+    .S00_AXI_RLAST        (s0_rlast),
+    .S00_AXI_RVALID       (s0_rvalid),
+    .S00_AXI_RREADY       (s0_rready),
+
+    .S01_AXI_ACLK         (aclk),
+    .S01_AXI_ARESET_OUT_N (),
+    .S01_AXI_AWID         (4'b0),
+    .S01_AXI_AWADDR       (32'b0),
+    .S01_AXI_AWLEN        (8'b0),
+    .S01_AXI_AWSIZE       (3'b0),
+    .S01_AXI_AWBURST      (2'b0),
+    .S01_AXI_AWLOCK       (2'b0),
+    .S01_AXI_AWCACHE      (4'b0),
+    .S01_AXI_AWPROT       (3'b0),
+    .S01_AXI_AWQOS        (4'b0),
+    .S01_AXI_AWVALID      (1'b0),
+    .S01_AXI_AWREADY      (),
+    .S01_AXI_WDATA        (32'b0),
+    .S01_AXI_WSTRB        (4'b0),
+    .S01_AXI_WLAST        (1'b0),
+    .S01_AXI_WVALID       (1'b0),
+    .S01_AXI_WREADY       (),
+    .S01_AXI_BID          (),
+    .S01_AXI_BRESP        (),
+    .S01_AXI_BVALID       (),
+    .S01_AXI_BREADY       (1'b0),
+    .S01_AXI_ARID         (4'b0),
+    .S01_AXI_ARADDR       (vdma_mm2s_araddr),
+    .S01_AXI_ARLEN        (vdma_mm2s_arlen),
+    .S01_AXI_ARSIZE       (vdma_mm2s_arsize),
+    .S01_AXI_ARBURST      (vdma_mm2s_arburst),
+    .S01_AXI_ARLOCK       (2'b0),
+    .S01_AXI_ARCACHE      (vdma_mm2s_arcache),
+    .S01_AXI_ARPROT       (vdma_mm2s_arprot),
+    .S01_AXI_ARQOS        (4'b0),
+    .S01_AXI_ARVALID      (vdma_mm2s_arvalid),
+    .S01_AXI_ARREADY      (vdma_mm2s_arready),
+    .S01_AXI_RID          (),
+    .S01_AXI_RDATA        (vdma_mm2s_rdata),
+    .S01_AXI_RRESP        (vdma_mm2s_rresp),
+    .S01_AXI_RLAST        (vdma_mm2s_rlast),
+    .S01_AXI_RVALID       (vdma_mm2s_rvalid),
+    .S01_AXI_RREADY       (vdma_mm2s_rready),
+
+    .M00_AXI_ACLK         (aclk),
+    .M00_AXI_ARESET_OUT_N (),
+    .M00_AXI_AWID         (vga_ddr_awid),
+    .M00_AXI_AWADDR       (vga_ddr_awaddr),
+    .M00_AXI_AWLEN        (vga_ddr_awlen),
+    .M00_AXI_AWSIZE       (vga_ddr_awsize),
+    .M00_AXI_AWBURST      (vga_ddr_awburst),
+    .M00_AXI_AWLOCK       (vga_ddr_awlock),
+    .M00_AXI_AWCACHE      (vga_ddr_awcache),
+    .M00_AXI_AWPROT       (vga_ddr_awprot),
+    .M00_AXI_AWQOS        (),
+    .M00_AXI_AWVALID      (vga_ddr_awvalid),
+    .M00_AXI_AWREADY      (vga_ddr_awready),
+    .M00_AXI_WDATA        (vga_ddr_wdata),
+    .M00_AXI_WSTRB        (vga_ddr_wstrb),
+    .M00_AXI_WLAST        (vga_ddr_wlast),
+    .M00_AXI_WVALID       (vga_ddr_wvalid),
+    .M00_AXI_WREADY       (vga_ddr_wready),
+    .M00_AXI_BID          ({1'b0,vga_ddr_bid}),
+    .M00_AXI_BRESP        (vga_ddr_bresp),
+    .M00_AXI_BVALID       (vga_ddr_bvalid),
+    .M00_AXI_BREADY       (vga_ddr_bready),
+    .M00_AXI_ARID         (vga_ddr_arid),
+    .M00_AXI_ARADDR       (vga_ddr_araddr),
+    .M00_AXI_ARLEN        (vga_ddr_arlen),
+    .M00_AXI_ARSIZE       (vga_ddr_arsize),
+    .M00_AXI_ARBURST      (vga_ddr_arburst),
+    .M00_AXI_ARLOCK       (vga_ddr_arlock),
+    .M00_AXI_ARCACHE      (vga_ddr_arcache),
+    .M00_AXI_ARPROT       (vga_ddr_arprot),
+    .M00_AXI_ARQOS        (),
+    .M00_AXI_ARVALID      (vga_ddr_arvalid),
+    .M00_AXI_ARREADY      (vga_ddr_arready),
+    .M00_AXI_RID          ({1'b0,vga_ddr_rid}),
+    .M00_AXI_RDATA        (vga_ddr_rdata),
+    .M00_AXI_RRESP        (vga_ddr_rresp),
+    .M00_AXI_RLAST        (vga_ddr_rlast),
+    .M00_AXI_RVALID       (vga_ddr_rvalid),
+    .M00_AXI_RREADY       (vga_ddr_rready)
+);
+*/
+
 //ddr3
 wire   c1_sys_clk_i;
 wire   c1_clk_ref_i;
@@ -1497,7 +2220,7 @@ begin
     interconnect_aresetn <= ~c1_rst0 && c1_calib_done;
 end
 
-//axi 3x1
+//axi 4x1: CPU, MAC, NAND DMA and VGA VDMA share DDR
 axi_interconnect_0 mig_axi_interconnect (
     .INTERCONNECT_ACLK    (c1_clk0             ),
     .INTERCONNECT_ARESETN (interconnect_aresetn),
@@ -1620,6 +2343,47 @@ axi_interconnect_0 mig_axi_interconnect (
     .S02_AXI_RLAST        (dma0_rlast          ),
     .S02_AXI_RVALID       (dma0_rvalid         ),
     .S02_AXI_RREADY       (dma0_rready         ),
+
+    // S03: VGA VDMA MM2S, AXI4 read-only traffic. Write channels are inactive.
+    .S03_AXI_ARESET_OUT_N (                    ),
+    .S03_AXI_ACLK         (aclk                ),
+    .S03_AXI_AWID         (4'b0                ),
+    .S03_AXI_AWADDR       (32'b0               ),
+    .S03_AXI_AWLEN        (8'b0                ),
+    .S03_AXI_AWSIZE       (3'b0                ),
+    .S03_AXI_AWBURST      (2'b0                ),
+    .S03_AXI_AWLOCK       (1'b0                ),
+    .S03_AXI_AWCACHE      (4'b0                ),
+    .S03_AXI_AWPROT       (3'b0                ),
+    .S03_AXI_AWQOS        (4'b0                ),
+    .S03_AXI_AWVALID      (1'b0                ),
+    .S03_AXI_AWREADY      (                    ),
+    .S03_AXI_WDATA        (32'b0               ),
+    .S03_AXI_WSTRB        (4'b0                ),
+    .S03_AXI_WLAST        (1'b0                ),
+    .S03_AXI_WVALID       (1'b0                ),
+    .S03_AXI_WREADY       (                    ),
+    .S03_AXI_BID          (                    ),
+    .S03_AXI_BRESP        (                    ),
+    .S03_AXI_BVALID       (                    ),
+    .S03_AXI_BREADY       (1'b0                ),
+    .S03_AXI_ARID         (4'b0                ),
+    .S03_AXI_ARADDR       (vdma_mm2s_araddr    ),
+    .S03_AXI_ARLEN        (vdma_mm2s_arlen     ),
+    .S03_AXI_ARSIZE       (vdma_mm2s_arsize    ),
+    .S03_AXI_ARBURST      (vdma_mm2s_arburst   ),
+    .S03_AXI_ARLOCK       (1'b0                ),
+    .S03_AXI_ARCACHE      (vdma_mm2s_arcache   ),
+    .S03_AXI_ARPROT       (vdma_mm2s_arprot    ),
+    .S03_AXI_ARQOS        (4'b0                ),
+    .S03_AXI_ARVALID      (vdma_mm2s_arvalid   ),
+    .S03_AXI_ARREADY      (vdma_mm2s_arready   ),
+    .S03_AXI_RID          (                    ),
+    .S03_AXI_RDATA        (vdma_mm2s_rdata     ),
+    .S03_AXI_RRESP        (vdma_mm2s_rresp     ),
+    .S03_AXI_RLAST        (vdma_mm2s_rlast     ),
+    .S03_AXI_RVALID       (vdma_mm2s_rvalid    ),
+    .S03_AXI_RREADY       (vdma_mm2s_rready    ),
 
     .M00_AXI_ARESET_OUT_N (ddr_aresetn         ),
     .M00_AXI_ACLK         (c1_clk0             ),
@@ -1881,4 +2645,3 @@ axi2apb_misc APB_DEV
 .nand_int           (nand_int         )
 );
 endmodule
-

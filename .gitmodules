@@ -1,0 +1,3 @@
+[submodule "rtl/third_party/core_usb_host"]
+	path = rtl/third_party/core_usb_host
+	url = https://github.com/ultraembedded/core_usb_host.git
