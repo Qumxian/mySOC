@@ -452,6 +452,7 @@ wire [8:0]   xbar_m_rready;
 // M07 USB register path: AXI3 at aclk -> AXI3 at USB PHY clock -> AXI4-Lite.
 // Address space: 0x1FB20000 - 0x1FB2FFFF (core registers use offsets 0x00-0x24).
 wire        usb_clk;
+(* ASYNC_REG = "TRUE", SHREG_EXTRACT = "NO" *)
 reg  [7:0]  usb_reset_release;
 wire        usb_aresetn;
 wire        usb_host_reset;
@@ -633,6 +634,7 @@ wire        video_field_id;
 wire [23:0] video_data;
 wire        vga_pixel_clk;
 wire        vga_clk_locked;
+(* ASYNC_REG = "TRUE", SHREG_EXTRACT = "NO" *)
 reg  [1:0]  vga_pixel_reset_sync;
 wire        vga_pixel_reset_asyncn;
 wire        vga_pixel_aresetn;
@@ -2355,7 +2357,7 @@ clk_wiz_vga VGA_PIXEL_CLOCK (
 axi_vdma_0 VGA_VDMA (
     .s_axi_lite_aclk       (aclk),
     .m_axi_mm2s_aclk       (aclk),
-    .m_axis_mm2s_aclk      (cpu_clk),
+    .m_axis_mm2s_aclk      (vga_pixel_clk),
     .axi_resetn            (aresetn),
     .s_axi_lite_awvalid    (vdma_axil_awvalid),
     .s_axi_lite_awready    (vdma_axil_awready),
@@ -2435,9 +2437,9 @@ v_tc_0 VGA_VTC (
 );
 
 v_axi4s_vid_out_0 VGA_VIDEO_OUT (
-    .aclk                (cpu_clk),
+    .aclk                (vga_pixel_clk),
     .aclken              (1'b1),
-    .aresetn             (cpu_aresetn),
+    .aresetn             (vga_pixel_aresetn),
     .s_axis_video_tdata  (vdma_axis_tdata),
     .s_axis_video_tvalid (vdma_axis_tvalid),
     .s_axis_video_tready (vdma_axis_tready),

@@ -291,3 +291,13 @@ set_property SLEW FAST [get_ports {
 
 # USB3500 CLKOUT is the 60 MHz UTMI reference clock for all link-side signals.
 create_clock -period 16.667 -name usb_phy_clk [get_ports FPGA_USB_PHY0_CLK]
+
+set_clock_groups -asynchronous \
+    -group [get_clocks usb_phy_clk] \
+    -group [get_clocks {clk_out1_clk_pll_33 clk_out2_clk_pll_33}]
+
+set_false_path -to [get_pins -hier -regexp \
+    {^vga_pixel_reset_sync_reg\[[0-9]+\]/CLR$}]
+
+set_false_path -to [get_pins -hier -regexp \
+    {^VGA_PIXEL_CLOCK/.*/seq_reg1_reg\[[0-9]+\]/CLR$}]
