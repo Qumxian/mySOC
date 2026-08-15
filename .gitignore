@@ -46,6 +46,13 @@ rtl/IP/xilinx_ip/**/*_stub.vhdl
 rtl/IP/xilinx_ip/**/*_sim_netlist.v
 rtl/IP/xilinx_ip/**/*_sim_netlist.vhdl
 
+# Clocking Wizard output products (regenerated from the checked-in XCI)
+rtl/IP/xilinx_ip/**/clk_wiz*.v
+rtl/IP/xilinx_ip/**/clk_wiz*.xdc
+rtl/IP/xilinx_ip/**/clk_pll*.v
+rtl/IP/xilinx_ip/**/clk_pll*.xdc
+rtl/IP/xilinx_ip/**/mmcm_pll_drp_func_*.vh
+
 run_vivado/project/
 project/
 

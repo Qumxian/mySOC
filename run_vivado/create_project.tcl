@@ -7,6 +7,7 @@ set project_path [file normalize [file join $script_dir project]]
 set rtl_dir      [file join $root_dir rtl]
 set ip_dir       [file join $rtl_dir IP]
 set soc_dir      [file join $rtl_dir soc_demo]
+set usb_dir      [file join $rtl_dir usb core_usb_host]
 set constr_dir   [file join $root_dir constraints]
 
 # The attached XPR itself does not contain myCPU files. Keep this enabled to
@@ -97,13 +98,19 @@ set design_files [list \
     [file join $ip_dir APB_DEV URT uart_tfifo.v] \
     [file join $ip_dir APB_DEV URT uart_top.v] \
     [file join $ip_dir APB_DEV URT uart_transmitter.v] \
+    [file join $usb_dir usbh_crc16.v] \
+    [file join $usb_dir usbh_crc5.v] \
+    [file join $usb_dir usbh_fifo.v] \
+    [file join $usb_dir usbh_host.v] \
+    [file join $usb_dir usbh_host_defs.v] \
+    [file join $usb_dir usbh_sie.v] \
     [file join $soc_dir soc_top.v] \
 ]
 
 set xilinx_ip_dir [file join $ip_dir xilinx_ip 2023.2]
 
-# Primary IP containers explicitly represented by the XPR. For the clock
-# converter, adding the XCIX also exposes its internal XCI to the project.
+# Primary IP containers required by the current SoC design. For IP packaged as
+# core containers, adding the XCIX also exposes its internal XCI to the project.
 set active_ip_files [list \
     [file join $xilinx_ip_dir mig_axi_32_loongson mig_axi_32.xci] \
     [file join $xilinx_ip_dir axi_interconnect_0 axi_interconnect_0.xci] \
@@ -112,6 +119,12 @@ set active_ip_files [list \
     [file join $xilinx_ip_dir dpram_512x32 dpram_512x32.xci] \
     [file join $xilinx_ip_dir axi_clock_converter_0 axi_clock_converter_0.xcix] \
     [file join $xilinx_ip_dir axi_2x1_mux axi_2x1_mux.xci] \
+    [file join $xilinx_ip_dir axi_crossbar_0 axi_crossbar_0.xcix] \
+    [file join $xilinx_ip_dir axi_protocol_converter_0 axi_protocol_converter_0.xcix] \
+    [file join $xilinx_ip_dir axi_vdma_0 axi_vdma_0.xcix] \
+    [file join $xilinx_ip_dir clk_wiz_vga clk_wiz_vga.xcix] \
+    [file join $xilinx_ip_dir v_axi4s_vid_out_0 v_axi4s_vid_out_0.xcix] \
+    [file join $xilinx_ip_dir v_tc_0 v_tc_0.xcix] \
 ]
 
 # These four files occur in the XPR with AutoDisabled=1. They are still added
