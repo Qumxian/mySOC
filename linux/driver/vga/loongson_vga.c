@@ -29,6 +29,7 @@
 #include <video/display_timing.h>
 #include <video/of_videomode.h>
 #include <video/videomode.h>
+#include <video/of_display_timing.h>
 
 /* axi_vdma_0 MM2S control registers. */
 #define VDMA_MM2S_DMACR                 0x0000
@@ -41,9 +42,9 @@
 #define VDMA_DMASR_ERR_IRQ              BIT(14)
 #define VDMA_DMASR_DLY_CNT_IRQ          BIT(13)
 #define VDMA_DMASR_FRM_CNT_IRQ          BIT(12)
-#define VDMA_DMASR_IRQ_MASK             GENMASK(14, 12)
-#define VDMA_DMASR_ERROR_MASK           GENMASK(15, 4)
-#define VDMA_MM2S_DESC                   0x0050
+#define VDMA_DMASR_IRQ_MASK             ((u32)GENMASK(14, 12))
+#define VDMA_DMASR_ERROR_MASK           ((u32)GENMASK(15, 4))
+#define VDMA_MM2S_DESC                  0x0050
 #define VDMA_DESC_VSIZE                 0x0000
 #define VDMA_DESC_HSIZE                 0x0004
 #define VDMA_DESC_FRMDLY_STRIDE         0x0008
