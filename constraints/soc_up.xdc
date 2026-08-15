@@ -189,7 +189,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports EJTAG_TCK]
 set_property IOSTANDARD LVCMOS33 [get_ports EJTAG_TDI]
 set_property IOSTANDARD LVCMOS33 [get_ports EJTAG_TMS]
 set_property IOSTANDARD LVCMOS33 [get_ports EJTAG_TDO]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets EJTAG_TCK_IBUF]
 
 create_clock -period 40.000 -name mrxclk_0 -waveform {0.000 20.000} [get_ports mrxclk_0]
 create_clock -period 40.000 -name mtxclk_0 -waveform {0.000 20.000} [get_ports mtxclk_0]

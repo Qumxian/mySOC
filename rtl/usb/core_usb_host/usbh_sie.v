@@ -115,6 +115,7 @@ reg [15:0]          token_q;
 reg                 wait_resp_q;
 
 reg [3:0]           state_q;
+reg                 utmi_txvalid_q;
 
 //-----------------------------------------------------------------
 // Definitions
@@ -348,9 +349,23 @@ end
 // Update state
 always @ (posedge clk_i or posedge rst_i)
 if (rst_i)
-    state_q   <= STATE_IDLE;
+begin
+    state_q        <= STATE_IDLE;
+    utmi_txvalid_q <= 1'b0;
+end
 else
-    state_q   <= next_state_r;
+begin
+    state_q <= next_state_r;
+
+    utmi_txvalid_q <= (next_state_r == STATE_TX_CRC1)   ||
+                      (next_state_r == STATE_TX_CRC2)   ||
+                      (next_state_r == STATE_TX_TOKEN1) ||
+                      (next_state_r == STATE_TX_TOKEN2) ||
+                      (next_state_r == STATE_TX_TOKEN3) ||
+                      (next_state_r == STATE_TX_PID)    ||
+                      (next_state_r == STATE_TX_ACKNAK) ||
+                      (next_state_r == STATE_TX_DATA);
+end
 
 //-----------------------------------------------------------------
 // Tx Token
@@ -750,59 +765,49 @@ begin : LOOP
 end
 endgenerate
 
-reg       utmi_txvalid_r;
 reg [7:0] utmi_data_r;
 
 always @ *
 begin
     if (state_q == STATE_TX_CRC1)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = crc_sum_q[7:0] ^ 8'hFF;
     end
     else if (state_q == STATE_TX_CRC2)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = crc_sum_q[15:8] ^ 8'hFF;
     end
     else if (state_q == STATE_TX_TOKEN1)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = token_pid_i;
     end
     else if (state_q == STATE_TX_TOKEN2)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = token_rev_w[7:0];
     end
     else if (state_q == STATE_TX_TOKEN3)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = token_rev_w[15:8];
     end
     else if (state_q == STATE_TX_PID)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = send_data1_q ? PID_DATA1 : PID_DATA0;
     end
     else if (state_q == STATE_TX_ACKNAK)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = PID_ACK;
     end
     else if (state_q == STATE_TX_DATA)
     begin
-        utmi_txvalid_r = 1'b1;
         utmi_data_r    = tx_data_i;
     end
     else
     begin
-        utmi_txvalid_r = 1'b0;
         utmi_data_r    = 8'b0;
     end
 end
 
-assign utmi_txvalid_o = utmi_txvalid_r;
+assign utmi_txvalid_o = utmi_txvalid_q;
 assign utmi_data_o    = utmi_data_r;
 
 // Push incoming data into FIFO (not PID or CRC)
