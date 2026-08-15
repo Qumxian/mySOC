@@ -292,6 +292,16 @@ set_property SLEW FAST [get_ports {
 # USB3500 CLKOUT is the 60 MHz UTMI reference clock for all link-side signals.
 create_clock -period 16.667 -name usb_phy_clk [get_ports FPGA_USB_PHY0_CLK]
 
+# USB3500 samples these link-to-PHY UTMI signals on the rising edge of CLKOUT.
+# Datasheet limits: input setup time 5 ns, input hold time 0 ns.
+set usb_utmi_outputs [get_ports {
+    FPGA_USB_PHY0_DATA[*] USB_TXVALID USB_OPMODE[*]
+    USB_XCVRSEL[*] USB_TERMSEL
+}]
+set_output_delay -clock usb_phy_clk -max 5.000 $usb_utmi_outputs
+set_output_delay -clock usb_phy_clk -min 0.000 $usb_utmi_outputs
+unset usb_utmi_outputs
+
 set_clock_groups -asynchronous \
     -group [get_clocks usb_phy_clk] \
     -group [get_clocks {clk_out1_clk_pll_33 clk_out2_clk_pll_33}]
