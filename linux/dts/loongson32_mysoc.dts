@@ -124,7 +124,7 @@
 			interrupt-parent = <&cpuic>;
 			/* axi_vdma_0/mm2s_introut directly drives CPU IRQ9. */
 			interrupts = <9>;
-			clocks = <&vga_pixel_clk 0>;
+			clocks = <&vga_pixel_clk>;
 			clock-names = "pixel";
 			display-timings {
 				native-mode = <&vga_640x480>;
@@ -148,22 +148,11 @@
 			};
 		};
 
-		vga_pixel_clk: clock-controller@1fb40000 {
-			/* The generic fallback is required by the Linux 5.14 driver. */
-			compatible = "xlnx,clocking-wizard-v6.0",
-				     "xlnx,clocking-wizard";
-			reg = <0x1fb40000 0x10000>;
-			#clock-cells = <1>;
-			clocks = <&cpu_clk>, <&bus_clk>;
-			clock-names = "clk_in1", "s_axi_aclk";
-			clock-output-names = "vga_pixel_clk", "vga_clk_unused1",
-				     "vga_clk_unused2", "vga_clk_unused3",
-				     "vga_clk_unused4", "vga_clk_unused5",
-				     "vga_clk_unused6";
-			/* 5.14 uses speed-grade; newer bindings use xlnx,speed-grade. */
-			speed-grade = <2>;
-			xlnx,speed-grade = <2>;
-			xlnx,nr-outputs = <1>;
+		vga_pixel_clk: vga-pixel-clock {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <25164110>;
+			clock-output-names = "vga_pixel_clk";
 		};
 
 		/*
