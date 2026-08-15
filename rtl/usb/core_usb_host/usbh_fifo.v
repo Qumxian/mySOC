@@ -66,6 +66,15 @@ reg [WIDTH-1:0]         ram [DEPTH-1:0];
 reg [ADDR_W-1:0]        rd_ptr;
 reg [ADDR_W-1:0]        wr_ptr;
 reg [COUNT_W-1:0]       count;
+reg [WIDTH-1:0]         data_q;
+
+wire                    push_accept_w;
+wire                    pop_accept_w;
+wire [ADDR_W-1:0]       rd_ptr_next_w;
+
+assign push_accept_w = push_i & ~full_o;
+assign pop_accept_w  = pop_i & ~empty_o;
+assign rd_ptr_next_w = rd_ptr + 1'b1;
 
 //-----------------------------------------------------------------
 // Sequential
@@ -76,40 +85,46 @@ begin
     count   <= {(COUNT_W) {1'b0}};
     rd_ptr  <= {(ADDR_W) {1'b0}};
     wr_ptr  <= {(ADDR_W) {1'b0}};
+    data_q  <= {(WIDTH) {1'b0}};
+end
+else if (flush_i)
+begin
+    count   <= {(COUNT_W) {1'b0}};
+    rd_ptr  <= {(ADDR_W) {1'b0}};
+    wr_ptr  <= {(ADDR_W) {1'b0}};
+    data_q  <= {(WIDTH) {1'b0}};
 end
 else
 begin
-
-    if (flush_i)
-    begin
-        count   <= {(COUNT_W) {1'b0}};
-        rd_ptr  <= {(ADDR_W) {1'b0}};
-        wr_ptr  <= {(ADDR_W) {1'b0}};
-    end
-
     // Push
-    if (push_i & ~full_o)
+    if (push_accept_w)
     begin
         ram[wr_ptr] <= data_i;
         wr_ptr      <= wr_ptr + 1;
     end
 
     // Pop
-    if (pop_i & ~empty_o)
+    if (pop_accept_w)
     begin
         rd_ptr      <= rd_ptr + 1;
     end
 
     // Count up
-    if ((push_i & ~full_o) & ~(pop_i & ~empty_o))
+    if (push_accept_w & ~pop_accept_w)
     begin
         count <= count + 1;
     end
     // Count down
-    else if (~(push_i & ~full_o) & (pop_i & ~empty_o))
+    else if (~push_accept_w & pop_accept_w)
     begin
         count <= count - 1;
     end
+
+    if (pop_accept_w && count > 1)
+        data_q <= ram[rd_ptr_next_w];
+    else if (push_accept_w &&
+             (empty_o || (pop_accept_w && count == 1)))
+        data_q <= data_i;
 end
 
 //-------------------------------------------------------------------
@@ -120,7 +135,7 @@ assign full_o    = (count == DEPTH);
 assign empty_o   = (count == 0);
 /* verilator lint_on WIDTH */
 
-assign data_o    = ram[rd_ptr];
+assign data_o    = data_q;
 
 
 endmodule
