@@ -1,0 +1,7 @@
+config USB_UE11_HCD
+	tristate "UE11 USB 1.1 host controller"
+	depends on USB && OF && HAS_IOMEM
+	help
+	  Enable support for the UE11 USB 1.1 host controller used by the
+	  Loongson mySOC FPGA platform.
+
