@@ -1019,6 +1019,7 @@ wire                      m1_rlast;
 wire                      m1_rvalid;
 wire                      m1_rready;
 
+/*
 debug_top u_debug_top(
     .sys_clk              (cpu_clk          ),
     .sys_rst_n            (resetn           ),
@@ -1038,8 +1039,10 @@ debug_top u_debug_top(
     .uart_txd             (UART_TX2         )
 
 );
+*/
 
 
+/*
 debug_sram u_debug_sram(
     .clk       (cpu_clk        ),
     .aresetn   (resetn         ),   
@@ -1076,14 +1079,15 @@ debug_sram u_debug_sram(
     .mem_rdata (mem_rdata     ) 
 
 );
+*/
 
 // debug UART is disconnected.
-assign uart_arready = 1'b0;
-assign uart_rid     = 4'b0;
-assign uart_rdata   = 32'b0;
-assign uart_rresp   = 2'b0;
-assign uart_rlast   = 1'b0;
-assign uart_rvalid  = 1'b0;
+// assign uart_arready = 1'b0;
+// assign uart_rid     = 4'b0;
+// assign uart_rdata   = 32'b0;
+// assign uart_rresp   = 2'b0;
+// assign uart_rlast   = 1'b0;
+// assign uart_rvalid  = 1'b0;
 
 // cpu
 core_top cpu_mid(
