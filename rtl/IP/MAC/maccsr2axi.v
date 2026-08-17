@@ -224,7 +224,7 @@ wire        bready;
 
 assign awvalid = awvalid_i;
 assign awready = csrack & !isWriting & !isReading;
-assign wready = !csrrw && csrack;
+assign wready = isWriting && csrack;
 assign bready = bready_i;
 assign wr_strb = {4{wvalid}} & wstrb_i;
 assign wr_valid = awvalid & awready;
